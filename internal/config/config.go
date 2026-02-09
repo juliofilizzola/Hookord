@@ -2,8 +2,6 @@ package config
 
 import "os"
 
-// Configuração básica
-
 type Config struct {
 	DiscordWebhookURL string
 }
