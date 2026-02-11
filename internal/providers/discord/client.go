@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -17,8 +18,8 @@ func NewClient(webhookURL string, logger *zerolog.Logger) *Client {
 		httpClient: &http.Client{Timeout: 10 * time.Second},
 		logger: logger.
 			With().
-			.Str("provider", "discord").
-			.Str("webhook_url", webhookURL[:30]+"...").
+			Str("provider", "discord").
+			Str("webhook_url", webhookURL[:30]+"...").
 			Logger(),
 	}
 }
@@ -26,7 +27,7 @@ func NewClient(webhookURL string, logger *zerolog.Logger) *Client {
 func (c *Client) Send(event core.Event) error {
 	embed := BuildEmbed(event)
 	payload := Webhook{
-		Embeds: []Embed{embed},
+		Embeds:   []Embed{embed},
 		Username: fmt.Sprintf("Hookord - %s", event.Repository.Name),
 	}
 
@@ -43,10 +44,17 @@ func (c *Client) Send(event core.Event) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(req)
+
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			c.logger.Error().Msgf("failed to close response body: %v", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != 204 {
 		c.logger.Error().Msgf("Discord webhook returned status code %d", resp.StatusCode)
