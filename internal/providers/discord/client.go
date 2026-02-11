@@ -1,0 +1,59 @@
+package discord
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/juliofilizzola/Hookord/internal/core"
+	"github.com/rs/zerolog"
+)
+
+func NewClient(webhookURL string, logger *zerolog.Logger) *Client {
+	return &Client{
+		webhookURL: webhookURL,
+		httpClient: &http.Client{Timeout: 10 * time.Second},
+		logger: logger.
+			With().
+			.Str("provider", "discord").
+			.Str("webhook_url", webhookURL[:30]+"...").
+			Logger(),
+	}
+}
+
+func (c *Client) Send(event core.Event) error {
+	embed := BuildEmbed(event)
+	payload := Webhook{
+		Embeds: []Embed{embed},
+		Username: fmt.Sprintf("Hookord - %s", event.Repository.Name),
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", c.webhookURL, bytes.NewBuffer(body))
+
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		c.logger.Error().Msgf("Discord webhook returned status code %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func (c *Client) Name() string {
+	return "discord"
+}
