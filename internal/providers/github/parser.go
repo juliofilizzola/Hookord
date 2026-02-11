@@ -59,3 +59,18 @@ func (p *Provider) EventTypeSupported() []providers.GithubEventType {
 		providers.GithubDeploymentEvent,
 	}
 }
+
+func (p *Provider) EventColor(eventType providers.GithubEventType) int {
+	switch eventType {
+	case providers.GithubPushEvent:
+		return 0x00FF00
+	case providers.GithubPullRequestEvent:
+		return 0x0099FF
+	case providers.GithubReleaseEvent:
+		return 0xFF6B35
+	case providers.GithubIssueEvent:
+		return 0xFF0000
+	default:
+		return 0x808080
+	}
+}
