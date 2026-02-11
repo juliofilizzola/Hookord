@@ -2,7 +2,6 @@ package providers
 
 import (
 	"github.com/juliofilizzola/Hookord/internal/core"
-	"github.com/juliofilizzola/Hookord/internal/providers/github"
 )
 
 type InputProvider interface {
