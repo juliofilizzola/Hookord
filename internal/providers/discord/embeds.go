@@ -11,27 +11,28 @@ import (
 )
 
 func BuildEmbed(event core.Event) *Embed {
+
 	embed := &Embed{
 		Title:       event.Title,
 		Description: event.Description,
 		URL:         event.URL,
 		Timestamp:   event.Timestamp.Format(time.RFC3339),
-		Color:       github.EventColor(providers.GithubEventType(event.Type)),
+		Color:       (&github.Provider{}).EventColor(providers.GithubEventType(event.Type)),
+		Footer:      nil,
+		Auth:        nil,
+		Fields:      nil,
 	}
 
-	// Footer com repo
 	embed.Footer = &EmbedFooter{
 		Text: fmt.Sprintf("%s/%s", event.Repository.Owner, event.Repository.Name),
 	}
 
-	// Author com user do GitHub
 	embed.Auth = &EmbedAuthor{
 		Name:    event.Author.Name,
 		IconURL: event.Author.Avatar,
 		URL:     fmt.Sprintf("https://github.com/%s", event.Author.Name),
 	}
 
-	// Campos extras por tipo de evento
 	switch event.Type {
 	case "push":
 		embed.Fields = append(embed.Fields, EmbedField{
@@ -45,7 +46,7 @@ func BuildEmbed(event core.Event) *Embed {
 		embed.Fields = []EmbedField{
 			{Name: "Status", Value: pr.PullRequest.State, Inline: true},
 			{Name: "#", Value: strconv.Itoa(pr.Number), Inline: true},
-			{Name: "Mergeável", Value: fmt.Sprintf("%t", pr.PullRequest.State != nil && *pr.PullRequest.Mergeable), Inline: true},
+			{Name: "Mergeável", Value: fmt.Sprintf("%t", pr.PullRequest.State), Inline: true},
 		}
 	}
 
