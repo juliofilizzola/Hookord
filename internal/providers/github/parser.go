@@ -47,3 +47,15 @@ func (p *Provider) Parse(eventType string, payload []byte) (core.Event, error) {
 
 	return evt, nil
 }
+
+func (p *Provider) EventTypeSupported() []providers.GithubEventType {
+	return []providers.GithubEventType{
+		providers.GithubPushEvent,
+		providers.GithubIssueEvent,
+		providers.GithubPullRequestEvent,
+		providers.GithubReleaseEvent,
+		providers.GithubWorkflowEvent,
+		providers.GithubPingEvent,
+		providers.GithubDeploymentEvent,
+	}
+}
