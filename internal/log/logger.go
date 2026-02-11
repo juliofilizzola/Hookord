@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewLogger(lavel string) *Logger {
-	lvl, err := zerolog.ParseLevel(lavel)
+func NewLogger(level string) *Logger {
+	lvl, err := zerolog.ParseLevel(level)
 
 	if err != nil {
 		lvl = zerolog.InfoLevel
