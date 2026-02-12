@@ -35,18 +35,27 @@ func BuildEmbed(event core.Event) *Embed {
 
 	switch event.Type {
 	case "push":
+		push, ok := event.Payload.(github.PushPayload)
+		if !ok {
+			break
+		}
+
 		embed.Fields = append(embed.Fields, EmbedField{
 			Name:   "Commits",
-			Value:  strconv.Itoa(len(event.Payload.(github.PushPayload).Commits)),
+			Value:  strconv.Itoa(len(push.Commits)),
 			Inline: true,
 		})
 
 	case "pull_request":
-		pr := event.Payload.(github.PullRequestPayload)
+		pr, ok := event.Payload.(github.PullRequestPayload)
+		if !ok {
+			break
+		}
+
 		embed.Fields = []EmbedField{
 			{Name: "Status", Value: pr.PullRequest.State, Inline: true},
 			{Name: "#", Value: strconv.Itoa(pr.Number), Inline: true},
-			{Name: "Mergeável", Value: fmt.Sprintf("%t", pr.PullRequest.State), Inline: true},
+			{Name: "Ação", Value: pr.Action, Inline: true},
 		}
 	}
 

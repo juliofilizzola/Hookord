@@ -18,7 +18,7 @@ func mapPushToEvent(push *PushPayload, evt *core.Event) {
 	evt.Author.Avatar = push.Pusher.AvatarURL
 
 	if len(push.Commits) == 1 {
-		evt.Description = fmt.Sprintf("Commits %", push.Commits[0].Msg)
+		evt.Description = fmt.Sprintf("Commit: %s", push.Commits[0].Msg)
 	}
 
 	if len(push.Commits) > 1 {

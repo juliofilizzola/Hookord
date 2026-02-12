@@ -13,13 +13,18 @@ import (
 )
 
 func NewClient(webhookURL string, logger *zerolog.Logger) *Client {
+	logWebhookURL := webhookURL
+	if len(logWebhookURL) > 30 {
+		logWebhookURL = logWebhookURL[:30] + "..."
+	}
+
 	return &Client{
 		webhookURL: webhookURL,
 		httpClient: &http.Client{Timeout: 10 * time.Second},
 		logger: logger.
 			With().
 			Str("provider", "discord").
-			Str("webhook_url", webhookURL[:30]+"...").
+			Str("webhook_url", logWebhookURL).
 			Logger(),
 	}
 }
@@ -27,7 +32,7 @@ func NewClient(webhookURL string, logger *zerolog.Logger) *Client {
 func (c *Client) Send(event core.Event) error {
 	embed := BuildEmbed(event)
 	payload := Webhook{
-		Embeds:   []Embed{embed},
+		Embeds:   []Embed{*embed},
 		Username: fmt.Sprintf("Hookord - %s", event.Repository.Name),
 	}
 

@@ -26,12 +26,14 @@ func (p *Provider) Parse(eventType string, payload []byte) (core.Event, error) {
 			return core.Event{}, err
 		}
 
+		evt.Payload = push
 		mapPushToEvent(&push, &evt)
 	case providers.GithubPullRequestEvent:
 		var pr PullRequestPayload
 		if err := json.Unmarshal(payload, &pr); err != nil {
 			return core.Event{}, fmt.Errorf("failed to unmarshal pull request payload: %w", err)
 		}
+		evt.Payload = pr
 		mapPullRequestToEvent(&pr, &evt)
 	case providers.GithubPingEvent:
 		evt.Title = "GitHub webhook ping recebido"
