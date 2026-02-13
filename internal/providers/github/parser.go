@@ -8,7 +8,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/juliofilizzola/Hookord/internal/core"
 	"github.com/juliofilizzola/Hookord/internal/providers"
+	"github.com/rs/zerolog"
 )
+
+func New(logger *zerolog.Logger) *Provider {
+	return &Provider{
+		logger: logger.With().Str("Componet", "github_parser").Logger(),
+	}
+}
 
 func (p *Provider) Parse(eventType string, payload []byte) (core.Event, error) {
 	evt := core.Event{
