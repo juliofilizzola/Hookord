@@ -11,7 +11,7 @@ type Dispatcher struct {
 	logger  zerolog.Logger
 }
 
-func NewDispatcher(outputs []OutputPort, logger zerolog.Logger) *Dispatcher {
+func NewDispatcher(outputs []OutputPort, logger *zerolog.Logger) *Dispatcher {
 	log := logger.
 		With().
 		Str("Componet", "ddispatcher").
