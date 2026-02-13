@@ -24,10 +24,13 @@ func NewClient(webhookURL string, logger *zerolog.Logger) *Client {
 	}
 }
 
-func (c *Client) Send(event core.Event) error {
+func (c *Client) SendMessage(event core.Event) error {
 	embed := BuildEmbed(event)
+	if embed == nil {
+		return fmt.Errorf("failed to build embed")
+	}
 	payload := Webhook{
-		Embeds:   []Embed{embed},
+		Embeds:   []Embed{*embed},
 		Username: fmt.Sprintf("Hookord - %s", event.Repository.Name),
 	}
 
