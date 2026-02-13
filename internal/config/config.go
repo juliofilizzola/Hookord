@@ -33,12 +33,13 @@ func LoadConfig() *Config {
 	if err := viper.Unmarshal(cfg); err != nil {
 		panic(fmt.Errorf("unable to decode into struct, %v", err))
 	}
+	fmt.Printf("Config loaded: %+v\n", cfg)
 
-	if cfg.GitHubSecret == "" {
+	if cfg.GitHub.WebhookSecret == "" {
 		panic("GitHub secret is required")
 	}
 
-	if cfg.DiscordWebhookURL == "" {
+	if cfg.Discord.WebhookURL == "" {
 		panic("Discord webhook URL is required")
 	}
 
@@ -46,7 +47,7 @@ func LoadConfig() *Config {
 }
 
 func (c *Config) ValidUrlProvider() error {
-	if !strings.HasPrefix(c.GitHubSecret, "https://") || !strings.HasPrefix(c.DiscordWebhookURL, "/slack") {
+	if !strings.HasPrefix(c.GitHub.WebhookSecret, "https://") || !strings.HasPrefix(c.Discord.WebhookURL, "/slack") {
 		return fmt.Errorf("invalid url provider")
 	}
 	return nil

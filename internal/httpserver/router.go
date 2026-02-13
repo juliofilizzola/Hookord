@@ -29,11 +29,11 @@ func NewRouter(
 
 	logger.Info().
 		Int("routes", len(router.Routes())).
-		Str("port", cfg.HTTPPort).Timestamp().
+		Str("port", cfg.HTTP.Port).Timestamp().
 		Msg("Router initialized")
 	return router
 }
 
 func Run(router *gin.Engine, port string) error {
-	return router.Run(":", port)
+	return router.Run(":" + port)
 }
