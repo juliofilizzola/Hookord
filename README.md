@@ -116,30 +116,6 @@ GHNOTIFY_GITHUB_WEBHOOK_SECRET=sha256=secret
 GHNOTIFY_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-## 🏗️ Arquitetura
-
-O fluxo do Hookord é modular e desacoplado, facilitando a extensão para outros providers além do Discord.
-
-```mermaid
-flowchart LR
-    GH[GitHub Webhook] -->|HTTP POST| Gin[HTTP Server (Gin)]
-    Gin -->|Valida HMAC & Parse| GHProv[GitHub Provider]
-    GHProv -->|Cria Evento| CoreEvt[core.Event]
-    CoreEvt -->|Despacha| Dispatcher[Dispatcher]
-    Dispatcher -->|Chama Output| DiscordProv[Discord Provider]
-    DiscordProv -->|Envia Embed| Discord[Discord Webhook]
-    Dispatcher -->|Futuro: Slack/Teams| Outros[Outros Providers]
-```
-
-- **Gin**: Recebe requisições HTTP e roteia para handlers.
-- **GitHub Provider**: Valida assinatura HMAC, faz parsing do payload e converte para evento interno.
-- **core.Event**: Representação agnóstica do evento (PR, push, etc.).
-- **Dispatcher**: Encaminha eventos para todos os outputs configurados (Discord, Slack, etc.), com paralelismo e retry.
-- **Discord Provider**: Constrói e envia embeds ricos para o Discord.
-- **Outros Providers**: Fácil adicionar novos destinos (Slack, Teams, etc.).
-
-Cada provider implementa interfaces de input/output, facilitando testes e extensões.
-
 ## 🚀 Deploy Produção
 
 ### Docker
