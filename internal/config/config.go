@@ -1,54 +1,54 @@
 package config
 
 import (
-	"fmt"
+	"os"
 	"strings"
-
-	"github.com/google/uuid"
-	"github.com/spf13/viper"
 )
 
-func LoadConfig() *Config {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./configs")
-	viper.AddConfigPath("$HOME/.github.com/juliofilizzola/Hookord")
-	viper.AddConfigPath("/etc/gihub.com/juliofilizzola/Hookord")
-	viper.AutomaticEnv()
+func loadEnv() *EnvConfig {
+	envs := &EnvConfig{}
 
-	viper.SetEnvPrefix("hookord")
+	envs.Port = os.Getenv("PORT")
+	envs.Level = os.Getenv("LOG_LEVEL")
+	envs.WebhookURL = os.Getenv("DISCORD_WEBHOOK_URL")
+	envs.WebhookSecret = os.Getenv("GITHUB_WEBHOOK_SECRET")
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	if allowedRepos := os.Getenv("ALLOWED_REPOS"); allowedRepos != "" {
+		envs.AllowedRepos = strings.Split(allowedRepos, ",")
 
-	viper.SetDefault("request_id", uuid.NewString())
-	viper.SetDefault("app_version", "0.0.1")
-	viper.SetDefault("app_name", "hookord")
-	viper.SetDefault("port", "8080")
-
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Error reading config file, using defaults", err)
+		for indexRepos := range envs.AllowedRepos {
+			envs.AllowedRepos[indexRepos] = strings.TrimSpace(envs.AllowedRepos[indexRepos])
+		}
 	}
+
+	return envs
+}
+
+func LoadConfig() *Config {
+	env := loadEnv()
+
 	cfg := &Config{}
 
-	if err := viper.Unmarshal(cfg); err != nil {
-		panic(fmt.Errorf("unable to decode into struct, %v", err))
-	}
-	fmt.Printf("Config loaded: %+v\n", cfg)
+	cfg.App.Name = "Hookord"
+	cfg.App.Version = "1.0.0"
+	cfg.HTTP.Port = "8080"
+	cfg.Logging.Level = "info"
 
-	if cfg.GitHub.WebhookSecret == "" {
-		panic("GitHub secret is required")
+	if env.Port != "" {
+		cfg.HTTP.Port = env.Port
 	}
-
-	if cfg.Discord.WebhookURL == "" {
-		panic("Discord webhook URL is required")
+	if env.Level != "" {
+		cfg.Logging.Level = env.Level
+	}
+	if env.WebhookURL != "" {
+		cfg.Discord.WebhookURL = env.WebhookURL
+	}
+	if env.WebhookSecret != "" {
+		cfg.GitHub.WebhookSecret = env.WebhookSecret
+	}
+	if len(env.AllowedRepos) > 0 {
+		cfg.GitHub.AllowedRepos = env.AllowedRepos
 	}
 
 	return cfg
-}
-
-func (c *Config) ValidUrlProvider() error {
-	if !strings.HasPrefix(c.GitHub.WebhookSecret, "https://") || !strings.HasPrefix(c.Discord.WebhookURL, "/slack") {
-		return fmt.Errorf("invalid url provider")
-	}
-	return nil
 }
