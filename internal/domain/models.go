@@ -27,6 +27,6 @@ type MessageRepository interface {
 }
 
 type DiscordProvider interface {
-	SendMessage(ctx context.Context, channelID string, embed interface{}) (string, error)
+	SendMessage(ctx context.Context, channelID string, content string, embed interface{}) (string, error)
 	EditMessage(ctx context.Context, channelID string, messageID string, embed interface{}) error
 }
