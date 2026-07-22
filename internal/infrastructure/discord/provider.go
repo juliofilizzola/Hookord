@@ -34,13 +34,18 @@ func NewProvider(token string) (domain.DiscordProvider, error) {
 	return &provider{session: dg}, nil
 }
 
-func (p *provider) SendMessage(ctx context.Context, channelID string, embed interface{}) (string, error) {
+func (p *provider) SendMessage(ctx context.Context, channelID string, content string, embed interface{}) (string, error) {
 	e, ok := embed.(*discordgo.MessageEmbed)
 	if !ok {
 		return "", fmt.Errorf("invalid embed type")
 	}
 
-	msg, err := p.session.ChannelMessageSendEmbed(channelID, e)
+	data := &discordgo.MessageSend{
+		Content: content,
+		Embed:   e,
+	}
+
+	msg, err := p.session.ChannelMessageSendComplex(channelID, data)
 	if err != nil {
 		return "", err
 	}
