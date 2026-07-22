@@ -13,6 +13,7 @@ type Config struct {
 	RedisURL        string
 	Port            string
 	LogLevel        string
+	Environment     string
 	ChannelMappings map[string]string
 }
 
@@ -25,6 +26,7 @@ func Load() (*Config, error) {
 		RedisURL:        os.Getenv("REDIS_URL"),
 		Port:            getEnv("PORT", "8080"),
 		LogLevel:        getEnv("LOG_LEVEL", "info"),
+		Environment:     getEnv("APP_ENV", "development"),
 		ChannelMappings: make(map[string]string),
 	}
 
