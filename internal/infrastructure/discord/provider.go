@@ -17,6 +17,19 @@ func NewProvider(token string) (domain.DiscordProvider, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Connected to Discord")
+
+	err = dg.Open()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(dg *discordgo.Session) {
+		err := dg.Close()
+		if err != nil {
+			fmt.Println("Failed to close discord session")
+		}
+	}(dg)
 
 	return &provider{session: dg}, nil
 }
