@@ -3,6 +3,7 @@ package issues
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/go-github/v60/github"
@@ -27,8 +28,13 @@ func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepos
 
 	embed := BuildEmbed(payload)
 
+	content := ""
+	if DetectType(payload.Issue.GetTitle()) == domain.TypeHot && payload.Issue.GetState() == domain.IssueStateOpen {
+		content = "@everyone"
+	}
+
 	if mapping == nil {
-		msgID, err := discord.SendMessage(ctx, channelID, embed)
+		msgID, err := discord.SendMessage(ctx, channelID, content, embed)
 		if err != nil {
 			return err
 		}
@@ -77,10 +83,31 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 				Inline: true,
 			},
 		},
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: payload.Repository.GetOwner().GetAvatarURL(),
+		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: "GitHub ↔ Discord Notification Bridge",
+			Text:    "GitHub ↔ Discord Notification Hookord",
+			IconURL: "https://raw.githubusercontent.com/juliofiliizzola/hookord/main/asserts/hookord_github.2.png",
 		},
 	}
 
 	return embed
+}
+
+func DetectType(title string) string {
+	title = strings.ToLower(title)
+	if strings.Contains(title, "fix") {
+		return domain.TypeFix
+	}
+	if strings.Contains(title, "hot") {
+		return domain.TypeHot
+	}
+	if strings.Contains(title, "doc") {
+		return domain.TypeDoc
+	}
+	if strings.Contains(title, "chore") {
+		return domain.TypeChore
+	}
+	return domain.TypeOther
 }
