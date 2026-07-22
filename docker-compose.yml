@@ -10,6 +10,22 @@ services:
     env_file:
       - .env
 
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8081:8080"
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - APP_ENV=development
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
   redis:
     image: redis:alpine
     ports:
