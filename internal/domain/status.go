@@ -8,6 +8,14 @@ const (
 )
 
 const (
+	TypeFix   = "fix"
+	TypeHot   = "hot"
+	TypeDoc   = "doc"
+	TypeChore = "chore"
+	TypeOther = "other"
+)
+
+const (
 	IssueStateOpen   = "open"
 	IssueStateClosed = "closed"
 )
