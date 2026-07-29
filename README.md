@@ -44,6 +44,13 @@ docker-compose up -d
 go run cmd/hookord/main.go
 ```
 
+## Validação de código (PRs para `main`)
+
+O repositório possui um workflow do GitHub Actions em `.github/workflows/go-code-validation.yml` que roda automaticamente em PRs abertas para `main` e valida:
+
+* `gofmt -s` (checagem de formatação)
+* `go vet ./...` (lint estático nativo do Go)
+
 ## Configuração do Webhook no GitHub
 
 1.  Vá nas configurações do seu repositório ou organização.
