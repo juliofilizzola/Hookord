@@ -1,206 +1,74 @@
-# Hookord 🚀
+# Hookord - GitHub ↔ Discord Notification Bridge
 
-[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://golang.org)
-[![Docker Image](https://img.shields.io/badge/Docker-20MB-2496ED?logo=docker)](https://hub.docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<img src="asserts/hookord_github.png" alt="Hookord GitHub" width="600" align="center"/>
 
-**Hookord** é um webhook forwarder de alta performance em Go que recebe notificações do GitHub e as envia para Discord com embeds bonitos e funcionais. Projetado com arquitetura de **providers** extensível (fácil adicionar Slack, Teams, etc.).
+Hookord é uma ponte de notificações entre GitHub e Discord desenvolvida em Go, focada em fornecer embeds modernos, organizados e ricas em informações.
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-- **Recebe GitHub Webhooks** (push, PRs, issues, releases, ping) com validação HMAC
-- **Embeds Discord profissionais** com cores dinâmicas, author, footer, fields inline
-- **Arquitetura extensível**: providers de input/output desacoplados
-- **Structured logging** com Zerolog (JSON, pronto pra ELK/Loki)
-- **Config YAML + ENV vars** (12-factor app)
-- **Docker multi-stage** (<20MB) + Healthchecks
-- **K8s ready** com non-root user e readiness probes
+*   **Embeds Personalizados:** Design superior à integração nativa.
+*   **Atualização de Mensagens:** Edita mensagens existentes em vez de criar novas para o mesmo evento (ex: atualização de status de PR ou progresso de Workflow).
+*   **Roteamento por Categoria:** Envie diferentes tipos de eventos para diferentes canais do Discord.
+*   **Arquitetura Escalável:** Baseado em Clean Architecture e DDD.
+*   **Observabilidade:** Health checks, métricas Prometheus e logs estruturados.
 
-## 📁 Estrutura do Projeto
+## Requisitos
 
-```text
-Hookord/
-├── cmd/
-│   └── hookord/
-│       └── main.go
-├── configs/
-│   ├── config.example.yaml
-│   └── config.yaml
-├── deployments/
-│   └── docker/
-│       ├── docker-compose.yml
-│       └── Dockerfile
-├── internal/
-│   ├── config/
-│   │   ├── config.go
-│   │   └── structs.go
-│   ├── core/
-│   │   ├── dispatcher.go
-│   │   ├── event.go
-│   │   └── ports.go
-│   ├── httpserver/
-│   │   ├── github_handler.go
-│   │   ├── handlers.go
-│   │   ├── middleware.go
-│   │   └── router.go
-│   ├── log/
-│   │   ├── logger.go
-│   │   └── structs.go
-│   └── providers/
-│       ├── interface.go
-│       ├── discord/
-│       │   ├── client.go
-│       │   ├── embeds.go
-│       │   └── stucts.go
-│       └── github/
-│           ├── mappers.go
-│           ├── parser.go
-│           └── stucts.go
-├── mock/
-│   └── discord.html
-├── go.mod
-├── go.sum
-└── README.md
-```
+*   Go 1.22+
+*   Redis
+*   Docker & Docker Compose (opcional)
 
-## 🚀 Quickstart
+## Configuração
 
-### 1. Clone e configure
-```bash
-git clone https://github.com/seuuser/hookord
-cd hookord
-cp configs/config.example.yaml configs/config.yaml
-# edite com seu GITHUB_WEBHOOK_SECRET e DISCORD_WEBHOOK_URL
-```
+1.  Crie um arquivo `.env` na raiz do projeto (veja `.env.example`).
+2.  Configure as seguintes variáveis:
+    *   `DISCORD_TOKEN`: Token do seu Bot do Discord.
+    *   `GITHUB_SECRET`: Segredo configurado no Webhook do GitHub.
+    *   `REDIS_URL`: URL de conexão do Redis (ex: `redis://localhost:6379`).
+    *   `DISCORD_CHANNEL_PULL_REQUESTS`: ID do canal para PRs.
+    *   `DISCORD_CHANNEL_ISSUES`: ID do canal para Issues.
+    *   `DISCORD_CHANNEL_WORKFLOWS`: ID do canal para Workflows.
+    *   `DISCORD_CHANNEL_REPOSITORY`: ID do canal para eventos de repositório (push, release, etc).
 
-### 2. Docker Compose (recomendado)
-```bash
-docker-compose up --build
-# testa:
-curl http://localhost:8080/healthz
-```
+## Execução
 
-### 3. Teste webhook
-```bash
-curl -X POST http://localhost:8080/webhooks/github \
-  -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\":\"refs/heads/main\"}' | openssl sha256 -hmac 'SEU_SECRET' | cut -d' ' -f2)" \
-  -H "X-GitHub-Event: push" \
-  -d '{"ref":"refs/heads/main","repository":{"full_name":"meuorg/meu-repo"},"pusher":{"name":"test"}}'
-```
-
-## 🔧 Configuração
-
-`configs/config.yaml`
-
-```yaml
-app:
-  name: "hookord"
-  version: "v1.0.0"
-
-http:
-  port: "8080"
-
-github:
-  webhook_secret: "sha256=SEU_GITHUB_WEBHOOK_SECRET"
-  allowed_repos:
-    - "sua-org/seu-repo"
-
-discord:
-  webhook_url: "https://discord.com/api/webhooks/ID/TOKEN"
-```
-
-OU variáveis de ambiente:
+### Via Docker
 
 ```bash
-GHNOTIFY_GITHUB_WEBHOOK_SECRET=sha256=secret
-GHNOTIFY_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+docker-compose up -d
 ```
 
-## 🚀 Deploy Produção
+### Localmente
 
-### Docker
 ```bash
-docker build -f deployments/docker/Dockerfile -t hookord:latest .
-docker run -p 8080:8080 \
-  -e GHNOTIFY_GITHUB_WEBHOOK_SECRET=sha256=prod \
-  -e GHNOTIFY_DISCORD_WEBHOOK_URL=https://... \
-  hookord:latest
+go run cmd/hookord/main.go
 ```
 
-### Kubernetes (exemplo mínimo)
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hookord
-spec:
-  replicas: 2
-  template:
-    spec:
-      containers:
-      - name: hookord
-        image: hookord:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: GHNOTIFY_GITHUB_WEBHOOK_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: hookord-secrets
-              key: webhook-secret
+## Configuração do Webhook no GitHub
+
+1.  Vá nas configurações do seu repositório ou organização.
+2.  Webhooks -> Add webhook.
+3.  Payload URL: `http://seu-dominio.com/webhook`
+4.  Content type: `application/json`
+5.  Secret: O mesmo valor definido em `GITHUB_SECRET`.
+6.  Selecione "Let me select individual events" e escolha os eventos suportados.
+
+## Arquitetura
+
+O projeto segue os princípios de Clean Architecture:
+
+*   **cmd/**: Ponto de entrada da aplicação.
+*   **internal/domain/**: Entidades e interfaces de negócio.
+*   **internal/application/**: Casos de uso e orquestração.
+*   **internal/infrastructure/**: Implementações de adaptadores externos (Discord, Redis, Config).
+*   **internal/events/**: Lógica específica para cada categoria de evento.
+
+## Eventos Suportados
+
+*   Pull Requests (Open, Reopen, Close, Merge)
+*   Issues (Open, Reopen, Close)
+*   Workflows (Em breve)
+*   Repository (Push, Release, Tags - Em breve)
+
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: hookord
-spec:
-  ports:
-  - port: 80
-    targetPort: 8080
-  selector:
-    app: hookord
-```
-
-## 📊 Observability
-
-Logs estruturados JSON (Grafana Loki, ELK):
-
-```json
-{"level":"info","time":1707890000,"service":"hookord","request_id":"abc123","path":"/webhooks/github","msg":"webhook processed"}
-```
-
-Endpoints:
-- `GET /healthz` → healthcheck
-- `GET /metrics` → Prometheus (futuro)
-
-## 🧪 Testando Local
-- Discord Mock: docker-compose up inclui mock em http://localhost:8081
-- GitHub Payloads: exemplos em test/payloads/ (futuro)
-- Unit tests: go test ./...
-
-## 🔮 Roadmap
-- GitHub → Discord (v1.0)
-- Slack/Teams providers
-- Rate limiting + retry queue (Redis)
-- Web UI dashboard
-- Multiple GitHub repos/orgs
-- Prometheus metrics
-- Horizontal scaling (sticky sessions)
-
-## 🙌 Contribuições
-- Fork o projeto
-- Crie feature branch (`git checkout -b feature/slack-provider`)
-- Commit suas mudanças (`git commit -m 'Add Slack provider'`)
-- Push pro branch (`git push origin feature/slack-provider`)
-- Abra Pull Request
-
-## 📄 Licença
-[MIT License](LICENSE)
-
-## 👥 Autores
-Julio Filizzola - DevOps Engineer
-
-⭐ Star pra ajudar a comunidade!
-🐛 Issues: abra um issue
-
-<div align="center"> <img src="https://img.shields.io/badge/built%20with-%E2%9D%A4%EF%B8%8F%20by%20Julio Filizzola-FF6B6B" alt="built with love"> </div>
+Desenvolvido por Julio Gomes.
