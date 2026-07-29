@@ -66,20 +66,15 @@ func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepos
 
 func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 	pr := payload.PullRequest
-	color := colors.Blue
 
 	status := pr.GetState()
 	if pr.GetDraft() {
 		status = domain.PullRequestStateDraft
-		color = colors.Grey
 	} else if pr.GetMerged() {
 		status = domain.PullRequestStateMerged
-		color = colors.Purple
-	} else if status == domain.PullRequestStateClosed {
-		color = colors.Red
-	} else if status == domain.PullRequestStateOpen {
-		color = colors.Green
 	}
+
+	color := DetectStaus(payload)
 
 	if DetectType(pr.GetTitle()) == domain.TypeHot {
 		color = colors.Red
@@ -169,6 +164,26 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 	}
 
 	return embed
+}
+
+func DetectStaus(payload *EventPayload) int {
+	pr := payload.PullRequest
+	color := colors.Blue
+
+	status := pr.GetState()
+	if pr.GetDraft() {
+		status = domain.PullRequestStateDraft
+		color = colors.Grey
+	} else if pr.GetMerged() {
+		status = domain.PullRequestStateMerged
+		color = colors.Purple
+	} else if status == domain.PullRequestStateClosed {
+		color = colors.Red
+	} else if status == domain.PullRequestStateOpen {
+		color = colors.Green
+	}
+
+	return color
 }
 
 func DetectType(title string) string {

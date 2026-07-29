@@ -30,11 +30,6 @@ func Load() (*Config, error) {
 		ChannelMappings: make(map[string]string),
 	}
 
-	// Load channel mappings from env
-	// DISCORD_CHANNEL_PULL_REQUESTS
-	// DISCORD_CHANNEL_ISSUES
-	// DISCORD_CHANNEL_WORKFLOWS
-	// DISCORD_CHANNEL_REPOSITORY
 	categories := []string{"pull_requests", "issues", "workflows", "repository"}
 	for _, cat := range categories {
 		envVar := "DISCORD_CHANNEL_" + strings.ToUpper(cat)
