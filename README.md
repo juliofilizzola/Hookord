@@ -71,4 +71,4 @@ O projeto segue os princípios de Clean Architecture:
 *   Repository (Push, Release, Tags - Em breve)
 
 ---
-Desenvolvido por Julio Gomes.
+Desenvolvido por Julio Filizzola.
