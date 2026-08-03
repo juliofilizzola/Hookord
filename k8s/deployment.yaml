@@ -5,7 +5,7 @@ metadata:
   labels:
     app: hookord
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: hookord
@@ -15,44 +15,15 @@ spec:
         app: hookord
     spec:
       containers:
-      - name: hookord
-        image: hookord:latest
-        ports:
-        - containerPort: 8080
-        envFrom:
-        - configMapRef:
-            name: hookord-config
-        - secretRef:
-            name: hookord-secrets
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          limits:
-            cpu: "500m"
-            memory: "256Mi"
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: hookord-service
-spec:
-  selector:
-    app: hookord
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: LoadBalancer
+        - name: hookord
+          image: hookord:latest ## todo: image urla 
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          
