@@ -1,4 +1,4 @@
-name: PR Request Changes on Validation Failure
+name: PR Review on Validation
 
 on:
   workflow_run:
@@ -13,12 +13,12 @@ permissions:
   pull-requests: write
 
 jobs:
-  request-changes:
-    name: Request changes when validation fails
-    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request' }}
+  review-pr:
+    name: Review PR based on validation result
+    if: ${{ github.event.workflow_run.event == 'pull_request' && (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Request changes on PR
+      - name: Review PR (Approve or Request Changes)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -41,10 +41,30 @@ jobs:
               return;
             }
 
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pullNumber,
-              event: "REQUEST_CHANGES",
-              body: "A validação automática falhou (formatação/lint/testes). Corrija os pontos reportados no workflow e envie novos commits.",
-            });
+            if (pr.draft) {
+              core.info(`PR #${pullNumber} is in draft state (blocked). Skipping review.`);
+              return;
+            }
+
+            const conclusion = context.payload.workflow_run.conclusion;
+
+            if (conclusion === "failure") {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+                event: "REQUEST_CHANGES",
+                body: "A validação automática falhou (formatação/lint/testes). Corrija os pontos reportados no workflow e envie novos commits.",
+              });
+              core.info(`Requested changes on PR #${pullNumber}.`);
+            } else if (conclusion === "success") {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+                event: "APPROVE",
+                body: "Todas as validações automáticas (formatação, lint e testes) passaram com sucesso! PR aprovada automaticamente.",
+              });
+              core.info(`Approved PR #${pullNumber}.`);
+            }
+
