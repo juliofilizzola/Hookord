@@ -16,6 +16,7 @@ permissions:
 jobs:
   format-and-lint:
     name: Format and Lint
+    if: ${{ github.event.pull_request.state == 'open' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,3 +39,6 @@ jobs:
 
       - name: Lint (go vet)
         run: go vet ./...
+
+      - name: Run tests
+        run: go test ./...
