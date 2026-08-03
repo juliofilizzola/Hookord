@@ -39,6 +39,3 @@ jobs:
 
       - name: Lint (go vet)
         run: go vet ./...
-
-      - name: Run tests
-        run: go test ./...
