@@ -1,0 +1,44 @@
+name: Go Code Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
+  format-and-lint:
+    name: Format and Lint
+    if: ${{ github.event.pull_request.state == 'open' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting (gofmt)
+        run: |
+          unformatted_files=$(gofmt -s -l .)
+          if [ -n "$unformatted_files" ]; then
+            echo "The following files are not properly formatted:"
+            echo "$unformatted_files"
+            exit 1
+          fi
+
+      - name: Lint (go vet)
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./...
