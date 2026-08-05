@@ -58,13 +58,11 @@ jobs:
               });
               core.info(`Requested changes on PR #${pullNumber}.`);
             } else if (conclusion === "success") {
-              await github.rest.pulls.createReview({
+              await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                pull_number: pullNumber,
-                event: "APPROVE",
-                body: "Todas as validações automáticas (formatação, lint e testes) passaram com sucesso! PR aprovada automaticamente.",
+                issue_number: pullNumber,
+                body: "✅ Todas as validações automáticas (formatação, lint e testes) passaram com sucesso! PR validada automaticamente.",
               });
-              core.info(`Approved PR #${pullNumber}.`);
+              core.info(`Commented success on PR #${pullNumber}.`);
             }
-
