@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: hookord
-          image: hookord:latest ## todo: image urla 
+          image: ghcr.io/juliofiliizzola/hookord:latest
           ports:
             - containerPort: 8080
           resources:
