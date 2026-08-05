@@ -39,3 +39,18 @@ jobs:
 
       - name: Lint (go vet)
         run: go vet ./...
+  tests:
+    name: Run Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run unit tests
+        run: go test -v -race ./...
