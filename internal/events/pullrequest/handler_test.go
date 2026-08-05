@@ -65,7 +65,7 @@ func TestBuildEmbed_UsesDraftStatusAndHotColor(t *testing.T) {
 	payload := &EventPayload{
 		PullRequest: &github.PullRequest{
 			Number:    github.Int(17),
-			Title:     github.String("hotfix: urgent production fix"),
+			Title:     github.String("HOT: urgent production patch"),
 			Body:      github.String("fix issue"),
 			HTMLURL:   github.String("https://example.com/pr/17"),
 			State:     github.String(domain.PullRequestStateOpen),
