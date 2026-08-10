@@ -158,7 +158,7 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 		},
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    "GitHub ↔ Discord Notification Hookord",
-			IconURL: "./../asserts/hookord_github.2.png",
+			IconURL: "https://hookord-bp.s3.us-east-1.amazonaws.com/hookord_github.2.png",
 		},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
