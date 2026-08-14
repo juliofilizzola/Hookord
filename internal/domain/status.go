@@ -8,6 +8,7 @@ const (
 )
 
 const (
+	TypeFeat  = "feat"
 	TypeFix   = "fix"
 	TypeHot   = "hot"
 	TypeDoc   = "doc"

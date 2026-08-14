@@ -74,7 +74,7 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 		status = domain.PullRequestStateMerged
 	}
 
-	color := DetectStaus(payload)
+	color := DetectStatus(payload)
 
 	if DetectType(pr.GetTitle()) == domain.TypeHot {
 		color = colors.Red
@@ -166,39 +166,53 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 	return embed
 }
 
-func DetectStaus(payload *EventPayload) int {
+func DetectStatus(payload *EventPayload) int {
 	pr := payload.PullRequest
-	color := colors.Blue
 
-	status := pr.GetState()
 	if pr.GetDraft() {
-		status = domain.PullRequestStateDraft
-		color = colors.Grey
-	} else if pr.GetMerged() {
-		status = domain.PullRequestStateMerged
-		color = colors.Purple
-	} else if status == domain.PullRequestStateClosed {
-		color = colors.Red
-	} else if status == domain.PullRequestStateOpen {
-		color = colors.Green
+		return colors.Grey
 	}
 
-	return color
+	if pr.GetMerged() {
+		return colors.Purple
+	}
+
+	switch DetectType(pr.GetTitle()) {
+	case domain.TypeFix:
+		return colors.Orange
+	case domain.TypeHot:
+		return colors.Red
+	case domain.TypeDoc:
+		return colors.Blue
+	case domain.TypeChore:
+		return colors.Grey
+	}
+
+	switch pr.GetState() {
+	case domain.PullRequestStateClosed:
+		return colors.Purple
+	case domain.PullRequestStateOpen:
+		return colors.Green
+	default:
+		return colors.Blue
+	}
 }
 
 func DetectType(title string) string {
-	title = strings.ToLower(title)
-	if strings.Contains(title, "fix") {
+	title = strings.ToLower(strings.TrimSpace(title))
+
+	switch {
+	case strings.HasPrefix(title, "feat"):
+		return domain.TypeFeat
+	case strings.HasPrefix(title, "fix"):
 		return domain.TypeFix
-	}
-	if strings.Contains(title, "hot") {
+	case strings.HasPrefix(title, "hot"):
 		return domain.TypeHot
-	}
-	if strings.Contains(title, "doc") {
+	case strings.HasPrefix(title, "doc"):
 		return domain.TypeDoc
-	}
-	if strings.Contains(title, "chore") {
+	case strings.HasPrefix(title, "chore"):
 		return domain.TypeChore
+	default:
+		return domain.TypeOther
 	}
-	return domain.TypeOther
 }
