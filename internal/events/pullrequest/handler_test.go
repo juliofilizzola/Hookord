@@ -30,7 +30,7 @@ func TestDetectType(t *testing.T) {
 	}
 }
 
-func TestDetectStaus(t *testing.T) {
+func TestDetectStatus(t *testing.T) {
 	tests := []struct {
 		name     string
 		state    string
@@ -54,7 +54,7 @@ func TestDetectStaus(t *testing.T) {
 				},
 			}
 
-			if got := DetectStaus(payload); got != tt.expected {
+			if got := DetectStatus(payload); got != tt.expected {
 				t.Fatalf("DetectStaus() = %d, want %d", got, tt.expected)
 			}
 		})
