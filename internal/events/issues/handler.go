@@ -88,7 +88,7 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 		},
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    "GitHub ↔ Discord Notification Hookord",
-			IconURL: "https://raw.githubusercontent.com/juliofiliizzola/hookord/main/asserts/hookord_github.2.png",
+			IconURL: "https://hookord-bp.s3.us-east-1.amazonaws.com/hookord_github.2.png",
 		},
 	}
 
@@ -96,7 +96,7 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 }
 
 func DetectType(title string) string {
-	title = strings.ToLower(title)
+	title = strings.ToLower(strings.TrimSpace(title))
 	if strings.Contains(title, "fix") {
 		return domain.TypeFix
 	}
