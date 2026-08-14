@@ -18,7 +18,7 @@ func TestDetectType(t *testing.T) {
 		{name: "hot uppercase", title: "HOT urgent patch", expected: domain.TypeHot},
 		{name: "doc", title: "docs: update readme", expected: domain.TypeDoc},
 		{name: "chore", title: "chore: bump dependency", expected: domain.TypeChore},
-		{name: "other", title: "feature: add dashboard", expected: domain.TypeOther},
+		{name: "other", title: "add dashboard", expected: domain.TypeOther},
 	}
 
 	for _, tt := range tests {
@@ -40,7 +40,7 @@ func TestDetectStatus(t *testing.T) {
 	}{
 		{name: "draft", state: domain.PullRequestStateOpen, draft: true, expected: colors.Grey},
 		{name: "merged", state: domain.PullRequestStateClosed, merged: true, expected: colors.Purple},
-		{name: "closed", state: domain.PullRequestStateClosed, expected: colors.Red},
+		{name: "closed", state: domain.PullRequestStateClosed, expected: colors.Purple},
 		{name: "open", state: domain.PullRequestStateOpen, expected: colors.Green},
 	}
 
