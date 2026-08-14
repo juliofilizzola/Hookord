@@ -26,6 +26,11 @@ func NewWebhookService(cfg *config.Config, repo domain.MessageRepository, discor
 }
 
 func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
+	if github.WebHookType(r) == "ping" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	payload, err := github.ValidatePayload(r, []byte(s.config.GithubSecret))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to validate payload")
