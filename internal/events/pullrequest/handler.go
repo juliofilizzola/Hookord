@@ -40,9 +40,6 @@ func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepos
 	}
 
 	if len(reviewers) > 0 && payload.PullRequest.GetState() == domain.PullRequestStateOpen {
-		if content != "" {
-			content += " "
-		}
 		content += strings.Join(reviewers, " ")
 	}
 
