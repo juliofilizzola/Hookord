@@ -34,15 +34,12 @@ func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepos
 		reviewers = append(reviewers, "@"+reviewer.GetLogin())
 	}
 
-	content := ""
+	content := "Faça o CodeReview"
 	if DetectType(payload.PullRequest.GetTitle()) == domain.TypeHot && payload.PullRequest.GetState() == domain.PullRequestStateOpen && !payload.PullRequest.GetDraft() {
 		content = "@everyone"
 	}
 
 	if len(reviewers) > 0 && payload.PullRequest.GetState() == domain.PullRequestStateOpen {
-		if content != "" {
-			content += " "
-		}
 		content += strings.Join(reviewers, " ")
 	}
 
