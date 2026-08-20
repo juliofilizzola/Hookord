@@ -174,6 +174,13 @@ func DetectStatus(payload *EventPayload) int {
 		return colors.Purple
 	}
 
+	switch pr.GetState() {
+	case domain.PullRequestStateClosed:
+		return colors.Purple
+	case domain.PullRequestStateOpen:
+		return colors.Green
+	}
+
 	switch DetectType(pr.GetTitle()) {
 	case domain.TypeFix:
 		return colors.Orange
@@ -183,15 +190,8 @@ func DetectStatus(payload *EventPayload) int {
 		return colors.Blue
 	case domain.TypeChore:
 		return colors.Grey
-	}
-
-	switch pr.GetState() {
-	case domain.PullRequestStateClosed:
-		return colors.Purple
-	case domain.PullRequestStateOpen:
-		return colors.Green
 	default:
-		return colors.Blue
+		return colors.Grey
 	}
 }
 
