@@ -12,12 +12,15 @@ type Event struct {
 }
 
 type MessageMapping struct {
-	EventID          string
-	DiscordMessageID string
-	DiscordChannelID string
-	Repository       string
-	EntityID         string
-	LastStatus       string
+	EventID          string          `json:"event_id,omitempty"`
+	DiscordMessageID string          `json:"discord_message_id,omitempty"`
+	DiscordChannelID string          `json:"discord_channel_id,omitempty"`
+	Repository       string          `json:"repository,omitempty"`
+	EntityID         string          `json:"entity_id,omitempty"`
+	LastStatus       string          `json:"last_status,omitempty"`
+	TotalReviews     int             `json:"total_reviews"`
+	TotalReviewers   int             `json:"total_reviewers"`
+	Reviewers        map[string]bool `json:"reviewers,omitempty"`
 }
 
 type MessageRepository interface {
