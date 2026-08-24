@@ -13,10 +13,12 @@ import (
 )
 
 type EventPayload struct {
-	Action      string
-	PullRequest *github.PullRequest
-	Sender      *github.User
-	Repository  *github.Repository
+	Action         string
+	PullRequest    *github.PullRequest
+	Sender         *github.User
+	Repository     *github.Repository
+	TotalReviews   int
+	TotalReviewers int
 }
 
 func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepository, discord domain.DiscordProvider, channelID string) error {
@@ -25,6 +27,11 @@ func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepos
 	mapping, err := repo.GetMapping(ctx, entityID)
 	if err != nil {
 		return err
+	}
+
+	if mapping != nil {
+		payload.TotalReviews = mapping.TotalReviews
+		payload.TotalReviewers = mapping.TotalReviewers
 	}
 
 	embed := BuildEmbed(payload)
@@ -55,6 +62,8 @@ func Handle(ctx context.Context, payload *EventPayload, repo domain.MessageRepos
 			Repository:       payload.Repository.GetFullName(),
 			EntityID:         entityID,
 			LastStatus:       payload.PullRequest.GetState(),
+			TotalReviews:     payload.TotalReviews,
+			TotalReviewers:   payload.TotalReviewers,
 		})
 	}
 
@@ -142,6 +151,16 @@ func BuildEmbed(payload *EventPayload) *discordgo.MessageEmbed {
 			{
 				Name:   "Labels",
 				Value:  labelsStr,
+				Inline: true,
+			},
+			{
+				Name:   "Total de reviews",
+				Value:  strconv.Itoa(payload.TotalReviews),
+				Inline: true,
+			},
+			{
+				Name:   "Total de usuários que fizeram review",
+				Value:  strconv.Itoa(payload.TotalReviewers),
 				Inline: true,
 			},
 			{
