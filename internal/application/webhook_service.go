@@ -66,7 +66,6 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 			Sender:      e.GetSender(),
 			Repository:  e.GetRepo(),
 		}, s.repo, s.discord, channelID)
-	case *github.PullRequestReviewEvent:
 		pr := e.GetPullRequest()
 		if pr != nil {
 			userLogin := ""
@@ -104,7 +103,6 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 				}, s.repo, s.discord, channelID)
 			}
 		}
-	case *github.PullRequestReviewCommentEvent:
 		pr := e.GetPullRequest()
 		if pr != nil {
 			userLogin := ""
