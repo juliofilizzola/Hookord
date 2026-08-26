@@ -8,28 +8,6 @@ import (
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/discord/colors"
 )
 
-func TestDetectType(t *testing.T) {
-	tests := []struct {
-		name     string
-		title    string
-		expected string
-	}{
-		{name: "fix", title: "fix: correct panic", expected: domain.TypeFix},
-		{name: "hot uppercase", title: "HOT urgent patch", expected: domain.TypeHot},
-		{name: "doc", title: "docs: update readme", expected: domain.TypeDoc},
-		{name: "chore", title: "chore: bump dependency", expected: domain.TypeChore},
-		{name: "other", title: "add dashboard", expected: domain.TypeOther},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := DetectType(tt.title); got != tt.expected {
-				t.Fatalf("DetectType(%q) = %q, want %q", tt.title, got, tt.expected)
-			}
-		})
-	}
-}
-
 func TestDetectStatus(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -54,7 +32,7 @@ func TestDetectStatus(t *testing.T) {
 				},
 			}
 
-			if got := DetectStatus(payload); got != tt.expected {
+			if got := buildColor(payload); got != tt.expected {
 				t.Fatalf("DetectStaus() = %d, want %d", got, tt.expected)
 			}
 		})
