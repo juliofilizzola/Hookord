@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/google/go-github/v60/github"
@@ -34,8 +33,6 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-
-	fmt.Printf("%s", []byte(s.config.GithubSecret))
 
 	payload, err := github.ValidatePayload(r, []byte("your_github_webhook_secret"))
 	if err != nil {
