@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/google/go-github/v60/github"
@@ -35,8 +34,6 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("%s", []byte(s.config.GithubSecret))
-
 	payload, err := github.ValidatePayload(r, []byte("your_github_webhook_secret"))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to validate payload")
@@ -66,80 +63,6 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 			Sender:      e.GetSender(),
 			Repository:  e.GetRepo(),
 		}, s.repo, s.discord, channelID)
-		pr := e.GetPullRequest()
-		if pr != nil {
-			userLogin := ""
-			if e.GetReview() != nil && e.GetReview().GetUser() != nil {
-				userLogin = e.GetReview().GetUser().GetLogin()
-			} else if e.GetSender() != nil {
-				userLogin = e.GetSender().GetLogin()
-			}
-
-			repoName := ""
-			if e.GetRepo() != nil {
-				repoName = e.GetRepo().GetFullName()
-			}
-
-			mapping, counterErr := s.reviewCounter.RecordReview(ctx, pr.GetID(), repoName, userLogin)
-			if counterErr != nil {
-				log.Error().Err(counterErr).Msg("failed to record review")
-			}
-
-			channelID := s.config.ChannelMappings["pull_requests"]
-			if channelID != "" {
-				totalReviews := 0
-				totalReviewers := 0
-				if mapping != nil {
-					totalReviews = mapping.TotalReviews
-					totalReviewers = mapping.TotalReviewers
-				}
-				err = pullrequest.Handle(ctx, &pullrequest.EventPayload{
-					Action:         e.GetAction(),
-					PullRequest:    pr,
-					Sender:         e.GetSender(),
-					Repository:     e.GetRepo(),
-					TotalReviews:   totalReviews,
-					TotalReviewers: totalReviewers,
-				}, s.repo, s.discord, channelID)
-			}
-		}
-		pr := e.GetPullRequest()
-		if pr != nil {
-			userLogin := ""
-			if e.GetComment() != nil && e.GetComment().GetUser() != nil {
-				userLogin = e.GetComment().GetUser().GetLogin()
-			} else if e.GetSender() != nil {
-				userLogin = e.GetSender().GetLogin()
-			}
-
-			repoName := ""
-			if e.GetRepo() != nil {
-				repoName = e.GetRepo().GetFullName()
-			}
-
-			mapping, counterErr := s.reviewCounter.RecordReview(ctx, pr.GetID(), repoName, userLogin)
-			if counterErr != nil {
-				log.Error().Err(counterErr).Msg("failed to record review comment")
-			}
-
-			channelID := s.config.ChannelMappings["pull_requests"]
-			if channelID != "" {
-				totalReviews := 0
-				totalReviewers := 0
-				if mapping != nil {
-					totalReviews = mapping.TotalReviews
-					totalReviewers = mapping.TotalReviewers
-				}
-				err = pullrequest.Handle(ctx, &pullrequest.EventPayload{
-					Action:         e.GetAction(),
-					PullRequest:    pr,
-					Sender:         e.GetSender(),
-					Repository:     e.GetRepo(),
-					TotalReviews:   totalReviews,
-					TotalReviewers: totalReviewers,
-				}, s.repo, s.discord, channelID)
-			}
-		}
 	case *github.IssuesEvent:
 		channelID := s.config.ChannelMappings["issues"]
 		if channelID == "" {
