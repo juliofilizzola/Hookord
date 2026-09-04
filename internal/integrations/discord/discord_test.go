@@ -64,7 +64,7 @@ type mockRepo struct {
 	saved    *domain.MessageMapping
 }
 
-func (m *mockRepo) GetMapping(ctx context.Context, entityID string) (*domain.MessageMapping, error) {
+func (m *mockRepo) GetMapping(_ context.Context, entityID string) (*domain.MessageMapping, error) {
 	if m.getErr != nil {
 		return nil, m.getErr
 	}
@@ -74,7 +74,7 @@ func (m *mockRepo) GetMapping(ctx context.Context, entityID string) (*domain.Mes
 	return m.mappings[entityID], nil
 }
 
-func (m *mockRepo) SaveMapping(ctx context.Context, mapping *domain.MessageMapping) error {
+func (m *mockRepo) SaveMapping(_ context.Context, mapping *domain.MessageMapping) error {
 	if m.saveErr != nil {
 		return m.saveErr
 	}
@@ -86,7 +86,7 @@ func (m *mockRepo) SaveMapping(ctx context.Context, mapping *domain.MessageMappi
 	return nil
 }
 
-func (m *mockRepo) DeleteMapping(ctx context.Context, entityID string) error {
+func (m *mockRepo) DeleteMapping(_ context.Context, entityID string) error {
 	if m.mappings != nil {
 		delete(m.mappings, entityID)
 	}
