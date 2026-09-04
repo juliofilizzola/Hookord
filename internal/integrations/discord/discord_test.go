@@ -368,7 +368,7 @@ func TestBusinessRules_MentionsAndContent(t *testing.T) {
 
 	t.Run("hot open Issue triggers @everyone", func(t *testing.T) {
 		issue := &github.Issue{
-			Title: github.String("HOT server crash"),
+			Title: new("HOT server crash"),
 			State: github.String(domain.IssueStateOpen),
 		}
 		if got := BuildIssueContent(issue); got != "@everyone" {
