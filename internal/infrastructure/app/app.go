@@ -45,10 +45,12 @@ func (a *App) Run() error {
 		Token:           a.cfg.DiscordToken,
 		ChannelMappings: a.cfg.ChannelMappings,
 	}, repo)
+
 	if err != nil {
 		log.Error().Err(err).Msg("failed to connect to discord")
 		return err
 	}
+
 	defer func() {
 		if err := discordIntegration.Close(); err != nil {
 			log.Error().Err(err).Msg("failed to close discord session")
