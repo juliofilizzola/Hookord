@@ -6,7 +6,6 @@ import (
 	"github.com/google/go-github/v60/github"
 )
 
-// PullRequestEvent contains the necessary context for Pull Request notifications.
 type PullRequestEvent struct {
 	Action         string
 	PullRequest    *github.PullRequest
@@ -16,7 +15,6 @@ type PullRequestEvent struct {
 	TotalReviewers int
 }
 
-// IssueEvent contains the necessary context for Issue notifications.
 type IssueEvent struct {
 	Action     string
 	Issue      *github.Issue
@@ -24,7 +22,6 @@ type IssueEvent struct {
 	Repository *github.Repository
 }
 
-// Integration defines the contract that any notification provider (Discord, Slack, etc.) must implement.
 type Integration interface {
 	Name() string
 	HandlePullRequest(ctx context.Context, event *PullRequestEvent) error
