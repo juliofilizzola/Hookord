@@ -2,49 +2,25 @@ package discord
 
 import (
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/google/go-github/v60/github"
-	"github.com/juliofiliizzola/hookord/internal/domain"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
 
-const (
-	footerText    = "GitHub ↔ Discord Notification Hookord"
-	footerIconURL = "https://hookord-bp.s3.us-east-1.amazonaws.com/hookord_github.2.png"
-)
-
-func BuildPullRequestContent(pr *github.PullRequest) string {
-	content := "Faça o CodeReview"
-	if buildType(pr.GetTitle()) == domain.TypeHot && pr.GetState() == domain.PullRequestStateOpen {
-		content = "@everyone"
-	}
-	return content
-}
-
 func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.MessageEmbed {
 	pr := payload.PullRequest
-	status := buildStatus(pr)
-	color := buildColor(payload)
+	status := BuildPullRequestStatus(pr)
+	color := BuildPullRequestColor(payload)
 
-	var authorName, authorIconURL string
-	if payload.Sender != nil {
-		authorName = payload.Sender.GetLogin()
-		authorIconURL = payload.Sender.GetAvatarURL()
-	}
+	authorIconURL := BuildPullRequestIconURL(payload)
+	authorName := BuildPullRequestName(payload)
 
-	var repoFullName, repoOwnerAvatarURL string
-	if payload.Repository != nil {
-		repoFullName = payload.Repository.GetFullName()
-		if payload.Repository.GetOwner() != nil {
-			repoOwnerAvatarURL = payload.Repository.GetOwner().GetAvatarURL()
-		}
-	}
+	repoFullName := BuildPullRequestNameRepository(payload)
+	repoOwnerAvatarURL := BuildPullRequestAvatarURL(payload)
 
 	embed := &discordgo.MessageEmbed{
-		Title:       buildTitle(pr),
+		Title:       BuildPullRequestTitle(pr),
 		URL:         pr.GetHTMLURL(),
 		Description: pr.GetBody(),
 		Color:       color,
@@ -65,22 +41,22 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 			},
 			{
 				Name:   "Stats",
-				Value:  buildStats(pr),
+				Value:  BuildPullRequestStats(pr),
 				Inline: true,
 			},
 			{
 				Name:   "Reviewers",
-				Value:  buildReviewers(pr),
+				Value:  BuildPullRequestReviewers(pr),
 				Inline: true,
 			},
 			{
 				Name:   "Assignees",
-				Value:  buildAssignees(pr),
+				Value:  BuildPullRequestAssignees(pr),
 				Inline: true,
 			},
 			{
 				Name:   "Labels",
-				Value:  buildLabels(pr),
+				Value:  BuildPullRequestLabels(pr),
 				Inline: true,
 			},
 			{
@@ -95,7 +71,7 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 			},
 			{
 				Name:   "Branch",
-				Value:  buildBranch(pr),
+				Value:  BuildPullRequestBranch(pr),
 				Inline: false,
 			},
 		},
@@ -103,8 +79,8 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 			URL: repoOwnerAvatarURL,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    footerText,
-			IconURL: footerIconURL,
+			Text:    FooterText,
+			IconURL: FooterIconURL,
 		},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -112,41 +88,21 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 	return embed
 }
 
-func BuildIssueContent(issue *github.Issue) string {
-	content := ""
-	if detectIssueType(issue.GetTitle()) == domain.TypeHot && issue.GetState() == domain.IssueStateOpen {
-		content = "@everyone"
-	}
-	return content
-}
-
 func BuildIssueEmbed(payload *integrations.IssueEvent) *discordgo.MessageEmbed {
 	issue := payload.Issue
-	color := ColorOrange
+	color := BuildIssueColor(issue)
 
 	status := issue.GetState()
-	if status == domain.IssueStateClosed {
-		color = ColorGrey
-	} else if status == domain.IssueStateOpen {
-		color = ColorGreen
-	}
+	authorName := BuildIssueName(payload)
+	authorIconURL := BuildIssueAuthorIconURL(payload)
 
-	var authorName, authorIconURL string
-	if payload.Sender != nil {
-		authorName = payload.Sender.GetLogin()
-		authorIconURL = payload.Sender.GetAvatarURL()
-	}
+	repoFullName := BuildIssueNameRepository(payload)
+	repoOwnerAvatarURL := BuildIssueAvatarURL(payload)
 
-	var repoFullName, repoOwnerAvatarURL string
-	if payload.Repository != nil {
-		repoFullName = payload.Repository.GetFullName()
-		if payload.Repository.GetOwner() != nil {
-			repoOwnerAvatarURL = payload.Repository.GetOwner().GetAvatarURL()
-		}
-	}
+	title := BuildIssueTitle(issue)
 
 	embed := &discordgo.MessageEmbed{
-		Title:       "Issue #" + strconv.Itoa(issue.GetNumber()) + " - " + issue.GetTitle(),
+		Title:       title,
 		URL:         issue.GetHTMLURL(),
 		Description: issue.GetBody(),
 		Color:       color,
@@ -170,139 +126,10 @@ func BuildIssueEmbed(payload *integrations.IssueEvent) *discordgo.MessageEmbed {
 			URL: repoOwnerAvatarURL,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    footerText,
-			IconURL: footerIconURL,
+			Text:    FooterText,
+			IconURL: FooterIconURL,
 		},
 	}
 
 	return embed
-}
-
-func buildColor(payload *integrations.PullRequestEvent) int {
-	pr := payload.PullRequest
-
-	if pr.GetDraft() {
-		return ColorGrey
-	}
-
-	if pr.GetMerged() {
-		return ColorPurple
-	}
-
-	if pr.GetState() == domain.PullRequestStateClosed {
-		return ColorDarkGrey
-	}
-
-	switch buildType(pr.GetTitle()) {
-	case domain.TypeFix:
-		return ColorOrange
-	case domain.TypeHot:
-		return ColorRed
-	case domain.TypeDoc:
-		return ColorBlue
-	case domain.TypeChore:
-		return ColorYellow
-	default:
-		return ColorGreen
-	}
-}
-
-func buildType(title string) string {
-	title = strings.ToLower(strings.TrimSpace(title))
-
-	switch {
-	case strings.HasPrefix(title, "feat"):
-		return domain.TypeFeat
-	case strings.HasPrefix(title, "fix"):
-		return domain.TypeFix
-	case strings.HasPrefix(title, "hot"):
-		return domain.TypeHot
-	case strings.HasPrefix(title, "doc"):
-		return domain.TypeDoc
-	case strings.HasPrefix(title, "chore"):
-		return domain.TypeChore
-	default:
-		return domain.TypeOther
-	}
-}
-
-func detectIssueType(title string) string {
-	title = strings.ToLower(strings.TrimSpace(title))
-	if strings.Contains(title, "fix") {
-		return domain.TypeFix
-	}
-	if strings.Contains(title, "hot") {
-		return domain.TypeHot
-	}
-	if strings.Contains(title, "doc") {
-		return domain.TypeDoc
-	}
-	if strings.Contains(title, "chore") {
-		return domain.TypeChore
-	}
-	return domain.TypeOther
-}
-
-func buildStatus(pr *github.PullRequest) string {
-	status := pr.GetState()
-
-	if pr.GetDraft() {
-		status = domain.PullRequestStateDraft
-	} else if pr.GetMerged() {
-		status = domain.PullRequestStateMerged
-	}
-
-	return status
-}
-
-func buildReviewers(pr *github.PullRequest) string {
-	var reviewers []string
-	for _, r := range pr.RequestedReviewers {
-		reviewers = append(reviewers, r.GetLogin())
-	}
-	return strings.Join(reviewers, ", ")
-}
-
-func buildAssignees(pr *github.PullRequest) string {
-	var assignees []string
-	for _, a := range pr.Assignees {
-		assignees = append(assignees, a.GetLogin())
-	}
-	return strings.Join(assignees, ", ")
-}
-
-func buildLabels(pr *github.PullRequest) string {
-	var labels []string
-	for _, l := range pr.Labels {
-		labels = append(labels, l.GetName())
-	}
-	return strings.Join(labels, ", ")
-}
-
-func buildTitle(pr *github.PullRequest) string {
-	baseRef := ""
-	if pr.GetBase() != nil {
-		baseRef = pr.GetBase().GetRef()
-	}
-	headRef := ""
-	if pr.GetHead() != nil {
-		headRef = pr.GetHead().GetRef()
-	}
-	return "Pull Request #" + strconv.Itoa(pr.GetNumber()) + " - " + pr.GetTitle() + "[" + baseRef + " <- " + headRef + "]"
-}
-
-func buildStats(pr *github.PullRequest) string {
-	return "++" + strconv.Itoa(pr.GetAdditions()) + " --" + strconv.Itoa(pr.GetDeletions())
-}
-
-func buildBranch(pr *github.PullRequest) string {
-	baseRef := ""
-	if pr.GetBase() != nil {
-		baseRef = pr.GetBase().GetRef()
-	}
-	headRef := ""
-	if pr.GetHead() != nil {
-		headRef = pr.GetHead().GetRef()
-	}
-	return baseRef + " <- " + headRef
 }
