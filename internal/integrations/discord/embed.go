@@ -16,7 +16,6 @@ const (
 	footerIconURL = "https://hookord-bp.s3.us-east-1.amazonaws.com/hookord_github.2.png"
 )
 
-// BuildPullRequestContent returns the text message to be sent alongside the PR embed (e.g., @everyone for hot open PRs).
 func BuildPullRequestContent(pr *github.PullRequest) string {
 	content := "Faça o CodeReview"
 	if buildType(pr.GetTitle()) == domain.TypeHot && pr.GetState() == domain.PullRequestStateOpen {
@@ -25,7 +24,6 @@ func BuildPullRequestContent(pr *github.PullRequest) string {
 	return content
 }
 
-// BuildPullRequestEmbed creates a Discord message embed representing a GitHub Pull Request event.
 func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.MessageEmbed {
 	pr := payload.PullRequest
 	status := buildStatus(pr)
@@ -114,7 +112,6 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 	return embed
 }
 
-// BuildIssueContent returns the text message for an Issue event (e.g., @everyone for hot open issues).
 func BuildIssueContent(issue *github.Issue) string {
 	content := ""
 	if detectIssueType(issue.GetTitle()) == domain.TypeHot && issue.GetState() == domain.IssueStateOpen {
@@ -123,7 +120,6 @@ func BuildIssueContent(issue *github.Issue) string {
 	return content
 }
 
-// BuildIssueEmbed creates a Discord message embed representing a GitHub Issue event.
 func BuildIssueEmbed(payload *integrations.IssueEvent) *discordgo.MessageEmbed {
 	issue := payload.Issue
 	color := ColorOrange
