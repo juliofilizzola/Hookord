@@ -7,7 +7,7 @@ const (
 
 const (
 	FIX   = "fix"
-	HOT   = "HOT"
+	HOT   = "hot"
 	DOC   = "doc"
 	CHORE = "chore"
 )
