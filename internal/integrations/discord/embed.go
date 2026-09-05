@@ -18,9 +18,10 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 
 	repoFullName := BuildPullRequestNameRepository(payload)
 	repoOwnerAvatarURL := BuildPullRequestAvatarURL(payload)
+	title := BuildPullRequestTitle(pr)
 
 	embed := &discordgo.MessageEmbed{
-		Title:       BuildPullRequestTitle(pr),
+		Title:       title,
 		URL:         pr.GetHTMLURL(),
 		Description: pr.GetBody(),
 		Color:       color,
