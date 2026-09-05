@@ -118,7 +118,7 @@ func BuildPullRequestTitle(pr *github.PullRequest) string {
 	if pr.GetHead() != nil {
 		headRef = pr.GetHead().GetRef()
 	}
-	return "Pull Request #" + strconv.Itoa(pr.GetNumber()) + " - " + pr.GetTitle() + "[" + baseRef + " <- " + headRef + "]"
+	return "Pull Request #" + strconv.Itoa(pr.GetNumber()) + " - " + pr.GetTitle() + " [" + baseRef + " <- " + headRef + "]"
 }
 
 func BuildPullRequestStats(pr *github.PullRequest) string {
