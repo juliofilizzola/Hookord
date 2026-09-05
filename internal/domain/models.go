@@ -28,8 +28,3 @@ type MessageRepository interface {
 	GetMapping(ctx context.Context, entityID string) (*MessageMapping, error)
 	DeleteMapping(ctx context.Context, entityID string) error
 }
-
-type DiscordProvider interface {
-	SendMessage(ctx context.Context, channelID string, content string, embed interface{}) (string, error)
-	EditMessage(ctx context.Context, channelID string, messageID string, embed interface{}) error
-}

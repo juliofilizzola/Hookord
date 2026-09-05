@@ -9,10 +9,11 @@ import (
 
 	"github.com/juliofiliizzola/hookord/internal/application"
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/config"
-	"github.com/juliofiliizzola/hookord/internal/infrastructure/discord"
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/http"
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/logger"
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/redis"
+	"github.com/juliofiliizzola/hookord/internal/integrations"
+	"github.com/juliofiliizzola/hookord/internal/integrations/discord"
 	"github.com/rs/zerolog/log"
 )
 
@@ -40,13 +41,24 @@ func (a *App) Run() error {
 		return err
 	}
 
-	discordProvider, err := discord.NewProvider(a.cfg.DiscordToken)
+	discordIntegration, err := discord.NewWithToken(discord.Config{
+		Token:           a.cfg.DiscordToken,
+		ChannelMappings: a.cfg.ChannelMappings,
+	}, repo)
+
 	if err != nil {
 		log.Error().Err(err).Msg("failed to connect to discord")
 		return err
 	}
 
-	webhookService := application.NewWebhookService(a.cfg, repo, discordProvider)
+	defer func() {
+		if err := discordIntegration.Close(); err != nil {
+			log.Error().Err(err).Msg("failed to close discord session")
+		}
+	}()
+
+	integrationManager := integrations.NewManager(discordIntegration)
+	webhookService := application.NewWebhookService(a.cfg, repo, integrationManager)
 	srv := http.NewServer(a.cfg.Port, webhookService)
 
 	go func() {

@@ -5,25 +5,24 @@ import (
 
 	"github.com/google/go-github/v60/github"
 	"github.com/juliofiliizzola/hookord/internal/domain"
-	"github.com/juliofiliizzola/hookord/internal/events/issues"
-	"github.com/juliofiliizzola/hookord/internal/events/pullrequest"
 	"github.com/juliofiliizzola/hookord/internal/events/review"
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/config"
+	"github.com/juliofiliizzola/hookord/internal/integrations"
 	"github.com/rs/zerolog/log"
 )
 
 type WebhookService struct {
 	config        *config.Config
 	repo          domain.MessageRepository
-	discord       domain.DiscordProvider
+	manager       *integrations.Manager
 	reviewCounter *review.Counter
 }
 
-func NewWebhookService(cfg *config.Config, repo domain.MessageRepository, discord domain.DiscordProvider) *WebhookService {
+func NewWebhookService(cfg *config.Config, repo domain.MessageRepository, manager *integrations.Manager) *WebhookService {
 	return &WebhookService{
 		config:        cfg,
 		repo:          repo,
-		discord:       discord,
+		manager:       manager,
 		reviewCounter: review.NewCounter(repo),
 	}
 }
@@ -34,7 +33,12 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := github.ValidatePayload(r, []byte("your_github_webhook_secret"))
+	secret := []byte("your_github_webhook_secret")
+	if s.config != nil && s.config.GithubSecret != "" {
+		secret = []byte(s.config.GithubSecret)
+	}
+
+	payload, err := github.ValidatePayload(r, secret)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to validate payload")
 		w.WriteHeader(http.StatusBadRequest)
@@ -52,30 +56,22 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 
 	switch e := event.(type) {
 	case *github.PullRequestEvent:
-		channelID := s.config.ChannelMappings["pull_requests"]
-		if channelID == "" {
-			log.Warn().Msg("no channel mapping for pull_requests")
-			return
-		}
-		err = pullrequest.Handle(ctx, &pullrequest.EventPayload{
-			Action:      e.GetAction(),
-			PullRequest: e.GetPullRequest(),
-			Sender:      e.GetSender(),
-			Repository:  e.GetRepo(),
-		}, s.repo, s.discord, channelID)
+		totalReviews, totalReviewers, _ := s.reviewCounter.GetReviewStats(ctx, e.GetPullRequest().GetID())
+		err = s.manager.HandlePullRequest(ctx, &integrations.PullRequestEvent{
+			Action:         e.GetAction(),
+			PullRequest:    e.GetPullRequest(),
+			Sender:         e.GetSender(),
+			Repository:     e.GetRepo(),
+			TotalReviews:   totalReviews,
+			TotalReviewers: totalReviewers,
+		})
 	case *github.IssuesEvent:
-		channelID := s.config.ChannelMappings["issues"]
-		if channelID == "" {
-			log.Warn().Msg("no channel mapping for issues")
-			return
-		}
-		err = issues.Handle(ctx, &issues.EventPayload{
+		err = s.manager.HandleIssue(ctx, &integrations.IssueEvent{
 			Action:     e.GetAction(),
 			Issue:      e.GetIssue(),
 			Sender:     e.GetSender(),
 			Repository: e.GetRepo(),
-		}, s.repo, s.discord, channelID)
-	// Add other cases here
+		})
 	default:
 		log.Info().Str("type", github.WebHookType(r)).Msg("received unhandled event")
 	}
