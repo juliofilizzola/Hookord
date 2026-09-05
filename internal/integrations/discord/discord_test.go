@@ -160,7 +160,6 @@ func TestHandlePullRequest_Success_NewMessage(t *testing.T) {
 		t.Errorf("expected color %d (Green), got %d", ColorGreen, client.lastMessageSend.Embed.Color)
 	}
 
-	// Verify repo saved mapping
 	if repo.saved == nil {
 		t.Fatal("expected mapping to be saved in repository")
 	}
