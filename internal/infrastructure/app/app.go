@@ -14,6 +14,7 @@ import (
 	"github.com/juliofiliizzola/hookord/internal/infrastructure/redis"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 	"github.com/juliofiliizzola/hookord/internal/integrations/discord"
+	"github.com/juliofiliizzola/hookord/internal/integrations/slack"
 	"github.com/rs/zerolog/log"
 )
 
@@ -57,7 +58,17 @@ func (a *App) Run() error {
 		}
 	}()
 
-	integrationManager := integrations.NewManager(discordIntegration)
+	slackIntegration, err := slack.NewWithToken(slack.Config{
+		Token:     a.cfg.SlackToken,
+		ChannelId: a.cfg.SlackChannelId,
+	}, repo)
+
+	if err != nil {
+		log.Error().Err(err).Msg("failed to connect to slack")
+		return err
+	}
+
+	integrationManager := integrations.NewManager(discordIntegration, slackIntegration)
 	webhookService := application.NewWebhookService(a.cfg, repo, integrationManager)
 	srv := http.NewServer(a.cfg.Port, webhookService)
 
