@@ -1,4 +1,4 @@
-package discord
+package utils
 
 const (
 	ColorOrange   = 0xe67e22
