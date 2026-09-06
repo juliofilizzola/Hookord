@@ -42,9 +42,7 @@ func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.At
 	branchField := slack.NewTextBlockObject("mrkdwn", "*Branch*\nmain <- 40-feat-adicionar-provider-do-slack", false, false)
 	branchSection := slack.NewSectionBlock(branchField, nil, nil)
 
-	footerIcon := slack.NewImageBlockElement("https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "GitHub Icon")
-	footerText := slack.NewTextBlockObject("mrkdwn", "GitHub ↔ Discord Notification Hookord • Hoje às 19:58", false, false)
-	footerContext := slack.NewContextBlock(FooterContext, footerIcon, footerText)
+	footerContext := BuildFooterPullRequest()
 
 	data := slack.Attachment{
 		Color: "#2eb886",
