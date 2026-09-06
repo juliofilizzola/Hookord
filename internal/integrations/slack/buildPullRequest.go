@@ -34,9 +34,15 @@ func BuildPullRequestContent(pullRequest *github.PullRequest) *slack.TextBlockOb
 
 	slackFormattedLink := "<" + pullRequestURL + "|*" + pullRequestTitleEscaped + "*>"
 
-	return slack.NewTextBlockObject("mrkdwn", slackFormattedLink, false, false)
+	return slack.NewTextBlockObject(ElementType, slackFormattedLink, false, false)
 }
 
 func BuildPullRequestThumbnail(pr *integrations.PullRequestEvent) *slack.ImageBlockElement {
 	return slack.NewImageBlockElement(pr.Repository.GetOwner().GetAvatarURL(), pr.Repository.GetOwner().GetName())
+}
+
+func BuildAuthorPullRequest(pr *integrations.PullRequestEvent) *slack.TextBlockObject {
+	auth := pr.Sender.GetName()
+
+	return slack.NewTextBlockObject(ElementType, auth, false, false)
 }
