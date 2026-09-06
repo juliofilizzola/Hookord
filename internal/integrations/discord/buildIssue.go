@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v60/github"
+	"github.com/juliofiliizzola/hookord/internal/common/utils"
 	"github.com/juliofiliizzola/hookord/internal/domain"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
@@ -13,11 +14,11 @@ func BuildIssueColor(issue *github.Issue) int {
 	status := issue.GetState()
 	switch status {
 	case domain.IssueStateClosed:
-		return ColorGrey
+		return utils.ColorGrey
 	case domain.IssueStateOpen:
-		return ColorGreen
+		return utils.ColorGreen
 	default:
-		return ColorOrange
+		return utils.ColorOrange
 	}
 }
 
