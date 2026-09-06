@@ -44,10 +44,16 @@ func BuildPullRequestThumbnail(pr *integrations.PullRequestEvent) *slack.ImageBl
 	return slack.NewImageBlockElement(pr.Repository.GetOwner().GetAvatarURL(), pr.Repository.GetOwner().GetName())
 }
 
-func BuildAuthorPullRequest(pr *integrations.PullRequestEvent) *slack.TextBlockObject {
-	auth := pr.Sender.GetName()
+func BuildThumbnailAccessoryPullRequest(pr *integrations.PullRequestEvent) *slack.Accessory {
+	thumb := BuildPullRequestThumbnail(pr)
+	return slack.NewAccessory(thumb)
+}
 
-	return slack.NewTextBlockObject(ElementType, auth, false, false)
+func BuildAuthorContextPullRequest(pr *integrations.PullRequestEvent) *slack.ContextBlock {
+	authorAvatar := slack.NewImageBlockElement(pr.PullRequest.User.GetAvatarURL(), pr.PullRequest.User.GetName())
+	authorText := slack.NewTextBlockObject(ElementType, fmt.Sprintf("*%s*", pr.PullRequest.User.GetName()), false, false)
+
+	return slack.NewContextBlock(AuthorContext, authorAvatar, authorText)
 }
 
 func BuildFooterPullRequest() *slack.ContextBlock {
@@ -56,7 +62,7 @@ func BuildFooterPullRequest() *slack.ContextBlock {
 	return slack.NewContextBlock(FooterContext, footerIcon, footerContext)
 }
 
-func BuildBranchPullRequest(pr *github.PullRequest) *slack.TextBlockObject {
+func BuildBranchPullRequest(pr *github.PullRequest) *slack.SectionBlock {
 	baseRef := ""
 	if pr.GetBase() != nil {
 		baseRef = pr.GetBase().GetRef()
@@ -67,8 +73,8 @@ func BuildBranchPullRequest(pr *github.PullRequest) *slack.TextBlockObject {
 	}
 
 	branch := fmt.Sprintf("*Branch*\n%s <- %s", baseRef, headRef)
-
-	return slack.NewTextBlockObject(ElementType, branch, false, false)
+	br := slack.NewTextBlockObject(ElementType, branch, false, false)
+	return slack.NewSectionBlock(br, nil, nil)
 }
 
 func BuildStatsPullRequest(pr *github.PullRequest) *slack.TextBlockObject {
@@ -119,4 +125,15 @@ func BuildRepositoryPullRequest(pr *github.PullRequest) *slack.TextBlockObject {
 	repository := fmt.Sprintf("*Repository*:\n%s", pr.GetBase().GetRepo().GetFullName())
 
 	return slack.NewTextBlockObject(ElementType, repository, false, false)
+}
+
+func BuildReviewsPullRequest(pr *github.PullRequest) *slack.TextBlockObject {
+	var Reviewers []string
+
+	for _, a := range pr.RequestedReviewers {
+		Reviewers = append(Reviewers, a.GetLogin())
+	}
+
+	ReviewersFormat := fmt.Sprintf("*Reviews*:\n%s", strings.Join(Reviewers, ", "))
+	return slack.NewTextBlockObject(ElementType, ReviewersFormat, false, false)
 }
