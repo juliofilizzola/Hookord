@@ -16,12 +16,17 @@ func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.At
 
 	titleSection := slack.NewSectionBlock(prTitleLink, nil, prThumbnailAccessory)
 
-	statusField := slack.NewTextBlockObject("mrkdwn", "*Status*\nopen", false, false)
-	repositoryField := slack.NewTextBlockObject("mrkdwn", "*Repository*\njuliofilizzola/Hookord", false, false)
-	statsField := slack.NewTextBlockObject("mrkdwn", "*Stats*\n++8 --0", false, false)
-	reviewersField := slack.NewTextBlockObject("mrkdwn", "*Reviewers*\n-", false, false)
-	assigneesField := slack.NewTextBlockObject("mrkdwn", "*Assignees*\njuliofilizzola", false, false)
-	labelsField := slack.NewTextBlockObject("mrkdwn", "*Labels*\nenhancement", false, false)
+	statusField := BuildStatusPullRequest(pr)
+	repositoryField := BuildRepositoryPullRequest(pr)
+
+	statsField := BuildStatsPullRequest(pr)
+
+	reviewersField := BuildReviewsPullRequest(pr)
+
+	assigneesField := BuildAssigneesPullRequest(pr)
+
+	labelsField := BuildLabesPullRequest(pr)
+
 	totalReviewsField := slack.NewTextBlockObject("mrkdwn", "*Total de reviews*\n0", false, false)
 	totalUsersField := slack.NewTextBlockObject("mrkdwn", "*Total de usuários que fizeram review*\n0", false, false)
 
@@ -37,9 +42,7 @@ func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.At
 	}
 	detailsSection := slack.NewSectionBlock(nil, detailsFields, nil)
 
-	branchField := slack.NewTextBlockObject("mrkdwn", "*Branch*\nmain <- 40-feat-adicionar-provider-do-slack", false, false)
-	branchSection := slack.NewSectionBlock(branchField, nil, nil)
-
+	branchSection := BuildBranchPullRequest(pr)
 	footerContext := BuildFooterPullRequest()
 
 	data := slack.Attachment{
