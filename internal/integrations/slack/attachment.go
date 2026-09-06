@@ -8,14 +8,12 @@ import (
 func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.Attachment {
 	pr := payload.PullRequest
 
-	authorAvatar := BuildPullRequestThumbnail(payload)
-	authorName := BuildAuthorPullRequest(payload)
-	authorContext := slack.NewContextBlock(BlockId, authorAvatar, authorName)
+	authorContext := BuildAuthorContextPullRequest(payload)
 
 	prTitleLink := BuildPullRequestContent(pr)
 
-	prThumbnail := BuildPullRequestThumbnail(payload)
-	prThumbnailAccessory := slack.NewAccessory(prThumbnail)
+	prThumbnailAccessory := BuildThumbnailAccessoryPullRequest(payload)
+
 	titleSection := slack.NewSectionBlock(prTitleLink, nil, prThumbnailAccessory)
 
 	statusField := slack.NewTextBlockObject("mrkdwn", "*Status*\nopen", false, false)
