@@ -8,15 +8,11 @@ import (
 func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.Attachment {
 	pr := payload.PullRequest
 
-	//authorAvatar := slack.NewImageBlockElement("https://avatars.githubusercontent.com/u/sua-imagem-aqui", "Author Avatar")
 	authorAvatar := BuildPullRequestThumbnail(payload)
-	authorName := slack.NewTextBlockObject("mrkdwn", "**juliofilizzola**", false, false)
-	authorContext := slack.NewContextBlock("author_context", authorAvatar, authorName)
+	authorName := BuildAuthorPullRequest(payload)
+	authorContext := slack.NewContextBlock(BlockId, authorAvatar, authorName)
 
 	prTitleLink := BuildPullRequestContent(pr)
-	////prThumbnail := slack.NewImageBlockElement("https://avatars.githubusercontent.com/u/imagem-lateral-aqui", "PR Thumbnail")
-	//prThumbnail := BuildPullRequestThumbnail(payload)
-	//prThumbnailAccessory := slack.NewAccessory(prThumbnail)
 
 	prThumbnail := BuildPullRequestThumbnail(payload)
 	prThumbnailAccessory := slack.NewAccessory(prThumbnail)
@@ -48,7 +44,7 @@ func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.At
 
 	footerIcon := slack.NewImageBlockElement("https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "GitHub Icon")
 	footerText := slack.NewTextBlockObject("mrkdwn", "GitHub ↔ Discord Notification Hookord • Hoje às 19:58", false, false)
-	footerContext := slack.NewContextBlock("footer_context", footerIcon, footerText)
+	footerContext := slack.NewContextBlock(FooterContext, footerIcon, footerText)
 
 	data := slack.Attachment{
 		Color: "#2eb886",
