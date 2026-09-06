@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/go-github/v60/github"
+	"github.com/juliofiliizzola/hookord/internal/common/utils"
 	"github.com/juliofiliizzola/hookord/internal/domain"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
@@ -156,8 +157,8 @@ func TestHandlePullRequest_Success_NewMessage(t *testing.T) {
 	if client.lastMessageSend.Embed == nil {
 		t.Fatal("expected embed to be non-nil")
 	}
-	if client.lastMessageSend.Embed.Color != ColorGreen {
-		t.Errorf("expected color %d (Green), got %d", ColorGreen, client.lastMessageSend.Embed.Color)
+	if client.lastMessageSend.Embed.Color != utils.ColorGreen {
+		t.Errorf("expected color %d (Green), got %d", utils.ColorGreen, client.lastMessageSend.Embed.Color)
 	}
 
 	if repo.saved == nil {
@@ -395,14 +396,14 @@ func TestBusinessRules_Colors(t *testing.T) {
 		title         string
 		expectedColor int
 	}{
-		{name: "draft PR", state: domain.PullRequestStateOpen, draft: true, expectedColor: ColorGrey},
-		{name: "merged PR", state: domain.PullRequestStateClosed, merged: true, expectedColor: ColorPurple},
-		{name: "closed unmerged PR", state: domain.PullRequestStateClosed, expectedColor: ColorDarkGrey},
-		{name: "fix PR", state: domain.PullRequestStateOpen, title: "fix: resolve bug", expectedColor: ColorOrange},
-		{name: "hot PR", state: domain.PullRequestStateOpen, title: "hot: critical fix", expectedColor: ColorRed},
-		{name: "doc PR", state: domain.PullRequestStateOpen, title: "doc: update readme", expectedColor: ColorBlue},
-		{name: "chore PR", state: domain.PullRequestStateOpen, title: "chore: update deps", expectedColor: ColorYellow},
-		{name: "feat/default PR", state: domain.PullRequestStateOpen, title: "feat: add user page", expectedColor: ColorGreen},
+		{name: "draft PR", state: domain.PullRequestStateOpen, draft: true, expectedColor: utils.ColorGrey},
+		{name: "merged PR", state: domain.PullRequestStateClosed, merged: true, expectedColor: utils.ColorPurple},
+		{name: "closed unmerged PR", state: domain.PullRequestStateClosed, expectedColor: utils.ColorDarkGrey},
+		{name: "fix PR", state: domain.PullRequestStateOpen, title: "fix: resolve bug", expectedColor: utils.ColorOrange},
+		{name: "hot PR", state: domain.PullRequestStateOpen, title: "hot: critical fix", expectedColor: utils.ColorRed},
+		{name: "doc PR", state: domain.PullRequestStateOpen, title: "doc: update readme", expectedColor: utils.ColorBlue},
+		{name: "chore PR", state: domain.PullRequestStateOpen, title: "chore: update deps", expectedColor: utils.ColorYellow},
+		{name: "feat/default PR", state: domain.PullRequestStateOpen, title: "feat: add user page", expectedColor: utils.ColorGreen},
 	}
 
 	for _, tt := range tests {
@@ -431,9 +432,9 @@ func TestBusinessRules_IssueColors(t *testing.T) {
 		state         string
 		expectedColor int
 	}{
-		{name: "open issue", state: domain.IssueStateOpen, expectedColor: ColorGreen},
-		{name: "closed issue", state: domain.IssueStateClosed, expectedColor: ColorGrey},
-		{name: "other issue state", state: "unknown", expectedColor: ColorOrange},
+		{name: "open issue", state: domain.IssueStateOpen, expectedColor: utils.ColorGreen},
+		{name: "closed issue", state: domain.IssueStateClosed, expectedColor: utils.ColorGrey},
+		{name: "other issue state", state: "unknown", expectedColor: utils.ColorOrange},
 	}
 
 	for _, tt := range tests {
