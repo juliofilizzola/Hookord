@@ -13,10 +13,6 @@ type Integration struct {
 	cfg    Config
 }
 
-func (integration *Integration) Name() string {
-	return "slack"
-}
-
 func (integration *Integration) HandleIssue(ctx context.Context, event *integrations.IssueEvent) error {
 	//TODO implement me
 	return nil
