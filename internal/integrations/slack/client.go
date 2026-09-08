@@ -1,9 +1,12 @@
 package slack
 
-import "github.com/slack-go/slack"
+import (
+	"github.com/slack-go/slack"
+)
 
 type SlackClient interface {
 	PostMessage(channelId string, data slack.Attachment) (string, string, error)
+	UpdateMessage(channelId, ts string, data slack.Attachment) (string, string, string, error)
 }
 
 type sessionClientSlack struct {
@@ -24,4 +27,8 @@ func NewSessionClient(token string) (SlackClient, error) {
 
 func (sl *sessionClientSlack) PostMessage(channelId string, data slack.Attachment) (string, string, error) {
 	return sl.session.PostMessage(channelId, slack.MsgOptionAttachments(data))
+}
+
+func (sl *sessionClientSlack) UpdateMessage(channelId, ts string, data slack.Attachment) (string, string, string, error) {
+	return sl.session.UpdateMessage(channelId, ts, slack.MsgOptionAttachments(data))
 }
