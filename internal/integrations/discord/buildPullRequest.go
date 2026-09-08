@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v60/github"
+	"github.com/juliofiliizzola/hookord/internal/common/utils"
 	"github.com/juliofiliizzola/hookord/internal/domain"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
 
 func BuildPullRequestContent(pr *github.PullRequest) string {
 	content := "Faça o CodeReview"
-	if BuildPullRequestType(pr.GetTitle()) == domain.TypeHot && pr.GetState() == domain.PullRequestStateOpen {
+	if utils.TypePullRequest(pr.GetTitle()) == domain.TypeHot && pr.GetState() == domain.PullRequestStateOpen {
 		content = "@everyone"
 	}
 	return content
@@ -37,28 +38,28 @@ func BuildPullRequestColor(payload *integrations.PullRequestEvent) int {
 	pr := payload.PullRequest
 
 	if pr.GetDraft() {
-		return ColorGrey
+		return utils.ColorGrey
 	}
 
 	if pr.GetMerged() {
-		return ColorPurple
+		return utils.ColorPurple
 	}
 
 	if pr.GetState() == domain.PullRequestStateClosed {
-		return ColorDarkGrey
+		return utils.ColorDarkGrey
 	}
 
-	switch BuildPullRequestType(pr.GetTitle()) {
+	switch utils.TypePullRequest(pr.GetTitle()) {
 	case domain.TypeFix:
-		return ColorOrange
+		return utils.ColorOrange
 	case domain.TypeHot:
-		return ColorRed
+		return utils.ColorRed
 	case domain.TypeDoc:
-		return ColorBlue
+		return utils.ColorBlue
 	case domain.TypeChore:
-		return ColorYellow
+		return utils.ColorYellow
 	default:
-		return ColorGreen
+		return utils.ColorGreen
 	}
 }
 
@@ -72,25 +73,6 @@ func BuildPullRequestStatus(pr *github.PullRequest) string {
 	}
 
 	return status
-}
-
-func BuildPullRequestType(title string) string {
-	title = strings.ToLower(strings.TrimSpace(title))
-
-	switch {
-	case strings.HasPrefix(title, "feat"):
-		return domain.TypeFeat
-	case strings.HasPrefix(title, "fix"):
-		return domain.TypeFix
-	case strings.HasPrefix(title, "hot"):
-		return domain.TypeHot
-	case strings.HasPrefix(title, "doc"):
-		return domain.TypeDoc
-	case strings.HasPrefix(title, "chore"):
-		return domain.TypeChore
-	default:
-		return domain.TypeOther
-	}
 }
 
 func BuildPullRequestAssignees(pr *github.PullRequest) string {

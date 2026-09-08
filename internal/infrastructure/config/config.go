@@ -10,11 +10,13 @@ import (
 type Config struct {
 	DiscordToken    string
 	GithubSecret    string
+	ChannelMappings map[string]string
+	SlackToken      string
+	SlackChannelId  string
 	RedisURL        string
 	Port            string
 	LogLevel        string
 	Environment     string
-	ChannelMappings map[string]string
 }
 
 func Load() (*Config, error) {
@@ -23,11 +25,13 @@ func Load() (*Config, error) {
 	config := &Config{
 		DiscordToken:    os.Getenv("DISCORD_TOKEN"),
 		GithubSecret:    os.Getenv("GITHUB_SECRET"),
+		ChannelMappings: make(map[string]string),
+		SlackToken:      os.Getenv("SLACK_TOKEN"),
+		SlackChannelId:  os.Getenv("SLACK_CHANNEL_ID"),
 		RedisURL:        os.Getenv("REDIS_URL"),
 		Port:            getEnv("PORT", "8080"),
 		LogLevel:        getEnv("LOG_LEVEL", "info"),
 		Environment:     getEnv("APP_ENV", "development"),
-		ChannelMappings: make(map[string]string),
 	}
 
 	categories := []string{"pull_requests", "issues", "workflows", "repository"}

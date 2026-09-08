@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/juliofiliizzola/hookord/internal/common/utils"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
 
@@ -80,8 +81,8 @@ func BuildPullRequestEmbed(payload *integrations.PullRequestEvent) *discordgo.Me
 			URL: repoOwnerAvatarURL,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    FooterText,
-			IconURL: FooterIconURL,
+			Text:    utils.FooterText,
+			IconURL: utils.FooterIconURL,
 		},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -127,8 +128,8 @@ func BuildIssueEmbed(payload *integrations.IssueEvent) *discordgo.MessageEmbed {
 			URL: repoOwnerAvatarURL,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    FooterText,
-			IconURL: FooterIconURL,
+			Text:    utils.FooterText,
+			IconURL: utils.FooterIconURL,
 		},
 	}
 

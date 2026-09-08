@@ -4,6 +4,7 @@
     <inspection_tool class="GoResourceLeak" enabled="true" level="WARNING" enabled_by_default="true">
       <functions>
         <function importPath="github.com/redis/go-redis" name="NewClient" />
+        <function importPath="github.com/bwmarrin/discordgo" name="New" />
       </functions>
     </inspection_tool>
   </profile>
