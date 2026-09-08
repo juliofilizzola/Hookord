@@ -3,7 +3,6 @@ package discord
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/juliofiliizzola/hookord/internal/domain"
@@ -25,7 +24,7 @@ func (integration *Integration) HandlePullRequest(ctx context.Context, event *in
 		return fmt.Errorf("%w: pull_requests", ErrChannelNotConfigured)
 	}
 
-	entityID := strconv.FormatInt(event.PullRequest.GetID(), 10)
+	entityID := fmt.Sprintf("%d-%s", event.PullRequest.GetID(), integration.Name())
 
 	mapping, err := integration.repo.GetMapping(ctx, entityID)
 	if err != nil {
@@ -62,9 +61,10 @@ func (integration *Integration) HandlePullRequest(ctx context.Context, event *in
 
 		if mapping == nil {
 			mapping = &domain.MessageMapping{
-				EntityID:   entityID,
-				Repository: repoFullName,
-				Reviewers:  make(map[string]bool),
+				EntityID:        entityID,
+				Repository:      repoFullName,
+				IntegrationName: integration.Name(),
+				Reviewers:       make(map[string]bool),
 			}
 		}
 
