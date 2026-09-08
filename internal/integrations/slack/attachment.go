@@ -26,7 +26,7 @@ func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.At
 	assigneesField := BuildAssigneesPullRequest(pr)
 
 	labelsField := BuildLabesPullRequest(pr)
-
+	// todo: fazer posteriormente
 	totalReviewsField := slack.NewTextBlockObject("mrkdwn", "*Total de reviews*\n0", false, false)
 	totalUsersField := slack.NewTextBlockObject("mrkdwn", "*Total de usuários que fizeram review*\n0", false, false)
 
