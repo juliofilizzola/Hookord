@@ -12,7 +12,7 @@ import (
 
 func BuildPullRequestContent(pr *github.PullRequest) string {
 	content := "Faça o CodeReview"
-	if BuildPullRequestType(pr.GetTitle()) == domain.TypeHot && pr.GetState() == domain.PullRequestStateOpen {
+	if utils.TypePullRequest(pr.GetTitle()) == domain.TypeHot && pr.GetState() == domain.PullRequestStateOpen {
 		content = "@everyone"
 	}
 	return content
@@ -49,7 +49,7 @@ func BuildPullRequestColor(payload *integrations.PullRequestEvent) int {
 		return utils.ColorDarkGrey
 	}
 
-	switch BuildPullRequestType(pr.GetTitle()) {
+	switch utils.TypePullRequest(pr.GetTitle()) {
 	case domain.TypeFix:
 		return utils.ColorOrange
 	case domain.TypeHot:
@@ -73,25 +73,6 @@ func BuildPullRequestStatus(pr *github.PullRequest) string {
 	}
 
 	return status
-}
-
-func BuildPullRequestType(title string) string {
-	title = strings.ToLower(strings.TrimSpace(title))
-
-	switch {
-	case strings.HasPrefix(title, "feat"):
-		return domain.TypeFeat
-	case strings.HasPrefix(title, "fix"):
-		return domain.TypeFix
-	case strings.HasPrefix(title, "hot"):
-		return domain.TypeHot
-	case strings.HasPrefix(title, "doc"):
-		return domain.TypeDoc
-	case strings.HasPrefix(title, "chore"):
-		return domain.TypeChore
-	default:
-		return domain.TypeOther
-	}
 }
 
 func BuildPullRequestAssignees(pr *github.PullRequest) string {
