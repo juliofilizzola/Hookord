@@ -3,6 +3,7 @@ package discord
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
@@ -164,7 +165,8 @@ func TestHandlePullRequest_Success_NewMessage(t *testing.T) {
 	if repo.saved == nil {
 		t.Fatal("expected mapping to be saved in repository")
 	}
-	if repo.saved.EntityID != "101" {
+	if repo.saved.EntityID != "101-discord" {
+		fmt.Println("repo", repo.saved.EntityID)
 		t.Errorf("saved entityID = %q, want '101'", repo.saved.EntityID)
 	}
 	if repo.saved.DiscordMessageID != "msg-discord-001" {
@@ -183,8 +185,8 @@ func TestHandlePullRequest_Success_EditMessage(t *testing.T) {
 	client := &mockDiscordClient{}
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
-			"101": {
-				EntityID:         "101",
+			"101-discord": {
+				EntityID:         "101-discord",
 				DiscordMessageID: "existing-msg-999",
 				DiscordChannelID: "channel-pr-123",
 				TotalReviews:     3,
@@ -368,7 +370,7 @@ func TestBusinessRules_MentionsAndContent(t *testing.T) {
 
 	t.Run("hot open Issue triggers @everyone", func(t *testing.T) {
 		issue := &github.Issue{
-			Title: new("HOT server crash"),
+			Title: github.String("HOT server crash"),
 			State: github.String(domain.IssueStateOpen),
 		}
 		if got := BuildIssueContent(issue); got != "@everyone" {
@@ -486,8 +488,8 @@ func TestHandlePullRequest_DiscordEditError(t *testing.T) {
 	client := &mockDiscordClient{editErr: errors.New("discord message not found")}
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
-			"10": {
-				EntityID:         "10",
+			"10-discord": {
+				EntityID:         "10-discord",
 				DiscordMessageID: "msg-old",
 				DiscordChannelID: "channel-pr-123",
 			},
