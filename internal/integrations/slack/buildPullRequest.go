@@ -137,3 +137,32 @@ func BuildReviewsPullRequest(pr *github.PullRequest) *slack.TextBlockObject {
 	ReviewersFormat := fmt.Sprintf("*Reviews*:\n%s", strings.Join(Reviewers, ", "))
 	return slack.NewTextBlockObject(ElementType, ReviewersFormat, false, false)
 }
+
+func BuildPullRequestColor(payload *integrations.PullRequestEvent) string {
+	pr := payload.PullRequest
+
+	if pr.GetDraft() {
+		return utils.ColorGreyText
+	}
+
+	if pr.GetMerged() {
+		return utils.ColorPurpleText
+	}
+
+	if pr.GetState() == domain.PullRequestStateClosed {
+		return utils.ColorDarkGreyText
+	}
+
+	switch utils.TypePullRequest(pr.GetTitle()) {
+	case domain.TypeFix:
+		return utils.ColorOrangeText
+	case domain.TypeHot:
+		return utils.ColorRedText
+	case domain.TypeDoc:
+		return utils.ColorBlueText
+	case domain.TypeChore:
+		return utils.ColorYellowText
+	default:
+		return utils.ColorGreenText
+	}
+}
