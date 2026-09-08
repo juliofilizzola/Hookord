@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/juliofiliizzola/hookord/internal/domain"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
 
@@ -18,22 +19,55 @@ func (integration *Integration) HandlePullRequest(ctx context.Context, event *in
 
 	channelId := integration.cfg.ChannelId
 
-	//
-	//entityID := strconv.FormatInt(event.PullRequest.GetID(), 10) + "-slack"
-	//
-	//mapping
+	entityID := fmt.Sprintf("%d-%s", event.PullRequest.GetID(), integration.Name())
 
-	data := BuildPullRequestAttachment(event)
-	fmt.Println(data)
-
-	msg, timestamp, err := integration.client.PostMessage(channelId, data)
-
-	fmt.Println(timestamp)
-	fmt.Println(msg)
+	mapping, err := integration.repo.GetMapping(ctx, entityID)
 
 	if err != nil {
 		return err
 	}
 
-	return nil
+	data := BuildPullRequestAttachment(event)
+
+	if mapping == nil || mapping.SlackMessageID == "" {
+		channelId, timestamp, err := integration.client.PostMessage(channelId, data)
+		if err != nil {
+			return err
+		}
+
+		if mapping == nil {
+			mapping = &domain.MessageMapping{
+				EntityID:        entityID,
+				SlackMessageID:  channelId,
+				SlackTimestamp:  timestamp,
+				IntegrationName: integration.Name(),
+			}
+			err = integration.repo.SaveMapping(ctx, mapping)
+			if err != nil {
+				return err
+			}
+		}
+
+		mapping.LastStatus = event.PullRequest.GetState()
+		mapping.TotalReviews = event.TotalReviews
+		mapping.TotalReviewers = event.TotalReviewers
+
+		return integration.repo.SaveMapping(ctx, mapping)
+	}
+
+	targetChannel := mapping.SlackMessageID
+	timestampSlack := mapping.SlackTimestamp
+
+	if targetChannel == "" || timestampSlack == "" {
+		return ErrEventNotFound
+	}
+	_, newTimestamp, _, err := integration.client.UpdateMessage(targetChannel, timestampSlack, data)
+
+	if err != nil {
+		return err
+	}
+
+	mapping.SlackTimestamp = newTimestamp
+
+	return integration.repo.SaveMapping(ctx, mapping)
 }
