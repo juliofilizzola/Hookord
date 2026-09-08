@@ -45,8 +45,10 @@ func BuildPullRequestAttachment(payload *integrations.PullRequestEvent) slack.At
 	branchSection := BuildBranchPullRequest(pr)
 	footerContext := BuildFooterPullRequest()
 
+	color := BuildPullRequestColor(payload)
+
 	data := slack.Attachment{
-		Color: "#2eb886",
+		Color: color,
 		Blocks: slack.Blocks{
 			BlockSet: []slack.Block{
 				authorContext,
