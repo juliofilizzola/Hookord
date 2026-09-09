@@ -27,6 +27,15 @@ func (integration *Integration) HandlePullRequest(ctx context.Context, event *in
 		return err
 	}
 
+	if mapping != nil {
+		if event.TotalReviews == 0 && mapping.TotalReviews > 0 {
+			event.TotalReviews = mapping.TotalReviews
+		}
+		if event.TotalReviewers == 0 && mapping.TotalReviewers > 0 {
+			event.TotalReviewers = mapping.TotalReviewers
+		}
+	}
+
 	data := BuildPullRequestAttachment(event)
 
 	if mapping == nil || mapping.SlackMessageID == "" {
