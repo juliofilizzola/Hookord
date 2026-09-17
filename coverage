@@ -1,0 +1,10 @@
+mode: set
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:23.2,24.1 4 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:25.2,35.1 4 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:37.2,38.33 4 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:39.3,40.42 2 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:41.4,42.1 1 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:45.2,45.20 1 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:49.2,49.40 1 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:50.3,51.1 1 1
+github.com/juliofiliizzola/hookord/internal/infrastructure/config/config.go:52.2,52.17 1 1

@@ -38,7 +38,7 @@ func (integration *Integration) HandlePullRequest(ctx context.Context, event *in
 
 	data := BuildPullRequestAttachment(event)
 
-	if mapping == nil || mapping.SlackMessageID == "" {
+	if mapping == nil {
 		channelId, timestamp, err := integration.client.PostMessage(channelId, data)
 		if err != nil {
 			return err
