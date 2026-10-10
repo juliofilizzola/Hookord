@@ -3,7 +3,9 @@ module github.com/juliofiliizzola/hookord
 go 1.26
 
 require (
+	github.com/alicebob/miniredis/v2 v2.39.0
 	github.com/bwmarrin/discordgo v0.29.0
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/google/go-github/v60 v60.0.0
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.24.0
@@ -13,7 +15,6 @@ require (
 )
 
 require (
-	github.com/alicebob/miniredis/v2 v2.39.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
