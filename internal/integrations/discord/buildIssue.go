@@ -2,7 +2,6 @@ package discord
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/google/go-github/v60/github"
 	"github.com/juliofiliizzola/hookord/internal/common/utils"
@@ -22,26 +21,9 @@ func BuildIssueColor(issue *github.Issue) int {
 	}
 }
 
-func BuildPullRequestDetectType(title string) string {
-	title = strings.ToLower(strings.TrimSpace(title))
-	if strings.Contains(title, FIX) {
-		return domain.TypeFix
-	}
-	if strings.Contains(title, HOT) {
-		return domain.TypeHot
-	}
-	if strings.Contains(title, DOC) {
-		return domain.TypeDoc
-	}
-	if strings.Contains(title, CHORE) {
-		return domain.TypeChore
-	}
-	return domain.TypeOther
-}
-
 func BuildIssueContent(issue *github.Issue) string {
 	content := ""
-	if BuildPullRequestDetectType(issue.GetTitle()) == domain.TypeHot && issue.GetState() == domain.IssueStateOpen {
+	if utils.TypePullRequest(issue.GetTitle()) == domain.TypeHot && issue.GetState() == domain.IssueStateOpen {
 		content = "@everyone"
 	}
 	return content

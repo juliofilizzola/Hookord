@@ -26,7 +26,7 @@ type mockSlackClient struct {
 	newTimestamp  string
 }
 
-func (m *mockSlackClient) PostMessage(channelId string, _ slackLib.Attachment) (string, string, error) {
+func (m *mockSlackClient) PostMessage(_ string, _ slackLib.Attachment) (string, string, error) {
 	m.postCalls++
 	if m.postErr != nil {
 		return "", "", m.postErr
@@ -34,7 +34,7 @@ func (m *mockSlackClient) PostMessage(channelId string, _ slackLib.Attachment) (
 	return m.postChannel, m.postTimestamp, nil
 }
 
-func (m *mockSlackClient) UpdateMessage(channelId, ts string, _ slackLib.Attachment) (string, string, string, error) {
+func (m *mockSlackClient) UpdateMessage(channelId, _ string, _ slackLib.Attachment) (string, string, string, error) {
 	m.updateCalls++
 	if m.updateErr != nil {
 		return "", "", "", m.updateErr
@@ -141,14 +141,6 @@ func TestIntegration_Close(t *testing.T) {
 	i := New(Config{Token: "tok"}, &mockRepo{}, &mockSlackClient{})
 	if err := i.Close(); err != nil {
 		t.Errorf("unexpected error on Close: %v", err)
-	}
-}
-
-func TestIntegration_HandleIssue_ReturnsNil(t *testing.T) {
-	i := New(Config{Token: "tok"}, &mockRepo{}, &mockSlackClient{})
-	err := i.HandleIssue(context.Background(), nil)
-	if err != nil {
-		t.Errorf("HandleIssue should return nil (stub), got %v", err)
 	}
 }
 

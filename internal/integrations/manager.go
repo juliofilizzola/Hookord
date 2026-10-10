@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Manager manages and dispatches events to registered integrations.
 type Manager struct {
 	integrations []Integration
 }
