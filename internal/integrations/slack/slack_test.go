@@ -34,7 +34,7 @@ func (m *mockSlackClient) PostMessage(_ string, _ slackLib.Attachment) (string, 
 	return m.postChannel, m.postTimestamp, nil
 }
 
-func (m *mockSlackClient) UpdateMessage(channelId, _ts string, _ slackLib.Attachment) (string, string, string, error) {
+func (m *mockSlackClient) UpdateMessage(channelId, _ string, _ slackLib.Attachment) (string, string, string, error) {
 	m.updateCalls++
 	if m.updateErr != nil {
 		return "", "", "", m.updateErr
