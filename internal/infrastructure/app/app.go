@@ -15,6 +15,7 @@ import (
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 	"github.com/juliofiliizzola/hookord/internal/integrations/discord"
 	"github.com/juliofiliizzola/hookord/internal/integrations/slack"
+	"github.com/juliofiliizzola/hookord/internal/integrations/telegram"
 	"github.com/rs/zerolog/log"
 )
 
@@ -68,7 +69,17 @@ func (a *App) Run() error {
 		return err
 	}
 
-	integrationManager := integrations.NewManager(discordIntegration, slackIntegration)
+	telegramIntegration, err := telegram.NewWithToken(telegram.Config{
+		Token:  a.cfg.TelegramToken,
+		ChatId: a.cfg.TelegramChatId,
+	}, repo)
+
+	if err != nil {
+		log.Error().Err(err).Msg("failed to connect to telegram")
+		return err
+	}
+
+	integrationManager := integrations.NewManager(discordIntegration, slackIntegration, telegramIntegration)
 	webhookService := application.NewWebhookService(a.cfg, repo, integrationManager)
 	srv := http.NewServer(a.cfg.Port, webhookService)
 
