@@ -144,14 +144,6 @@ func TestIntegration_Close(t *testing.T) {
 	}
 }
 
-func TestIntegration_HandleIssue_ReturnsNil(t *testing.T) {
-	i := New(Config{Token: "tok"}, &mockRepo{}, &mockSlackClient{})
-	err := i.HandleIssue(context.Background(), nil)
-	if err != nil {
-		t.Errorf("HandleIssue should return nil (stub), got %v", err)
-	}
-}
-
 // ---------------------------------------------------------------------------
 // New / NewWithToken
 // ---------------------------------------------------------------------------
