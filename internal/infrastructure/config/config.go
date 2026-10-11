@@ -13,6 +13,8 @@ type Config struct {
 	ChannelMappings map[string]string
 	SlackToken      string
 	SlackChannelId  string
+	TelegramToken   string
+	TelegramChatId  string
 	RedisURL        string
 	Port            string
 	LogLevel        string
@@ -28,6 +30,8 @@ func Load() (*Config, error) {
 		ChannelMappings: make(map[string]string),
 		SlackToken:      os.Getenv("SLACK_TOKEN"),
 		SlackChannelId:  os.Getenv("SLACK_CHANNEL_ID"),
+		TelegramToken:   os.Getenv("TELEGRAM_TOKEN"),
+		TelegramChatId:  os.Getenv("TELEGRAM_CHAT_ID"),
 		RedisURL:        os.Getenv("REDIS_URL"),
 		Port:            getEnv("PORT", "8080"),
 		LogLevel:        getEnv("LOG_LEVEL", "info"),
