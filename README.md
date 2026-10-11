@@ -1,4 +1,4 @@
-# Hookord - GitHub ↔ Discord & Slack Notification Bridge
+# Hookord - GitHub ↔ Discord, Slack & Telegram Notification Bridge
 
 <p align="center">
   <img src="asserts/hookord_github.png" alt="Hookord Banner" width="650"/>
@@ -8,11 +8,13 @@
   <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go" alt="Go Version"/>
   <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"/>
   <img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white" alt="Slack"/>
+  <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"/>
   <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white" alt="Kubernetes"/>
 </p>
 
-**Hookord** é uma ponte de notificações de alta performance desenvolvida em Go, conectando webhooks do GitHub a múltiplos serviços de mensageria (**Discord** e **Slack**). O projeto foca em fornecer mensagens modernas, organizadas, ricas em informações e com atualização em tempo real de mensagens existentes.
+**Hookord** é uma ponte de notificações de alta performance desenvolvida em Go, conectando webhooks do GitHub a múltiplos serviços de mensageria (**Discord**, **Slack** e **Telegram**). O projeto foca em fornecer mensagens modernas, organizadas, ricas em informações e com atualização em tempo real de mensagens existentes.
 
 ---
 
@@ -27,25 +29,28 @@
   - [Makefile](#atalhos-via-makefile)
   - [Docker & Docker Compose](#via-docker-compose)
   - [Localmente](#executando-localmente)
+  - [Kubernetes](#via-kubernetes)
 - [Configuração do Webhook no GitHub](#-configuração-do-webhook-no-github)
 - [Automação e CI/CD](#-automação-e-cicd)
-- [Status dos Eventos](#-status-dos-eventos-e-integrações)
+- [Status dos Eventos e Integrações](#-status-dos-eventos-e-integrações)
 
 ---
 
-##  Funcionalidades
+## ⚡ Funcionalidades
 
-* **Suporte Multiplataforma (Discord & Slack):** Envio simultâneo ou direcionado de eventos via `IntegrationManager`.
-* **Atualização Dinâmica de Mensagens:** Edita mensagens/embeds existentes em vez de criar novas para o mesmo evento (ex: transição de PR de `draft` para `open`, `merged` ou `closed`).
+* **Suporte Multiplataforma (Discord, Slack & Telegram):** Envio simultâneo ou direcionado de eventos via `IntegrationManager`.
+* **Atualização Dinâmica de Mensagens:** Edita mensagens/embeds existentes em vez de criar novas para o mesmo evento (ex: transição de PR de `draft` para `open`, `merged` ou `closed`, bem como transições de `issues`).
 * **Rastreamento de Code Reviews:** Contador de reviews totais e contagem de revisores únicos persistidos no Redis.
 * **Classificação Semântica & Alertas Inteligentes:** 
-  * Identificação automática de prefixos no título do PR (`feat`, `fix`, `hot`, `doc`, `chore`).
-  * Esquema de cores dinâmico de acordo com o status e tipo do evento.
-  * Menção automática de `@everyone` para PRs e Issues marcados como `hot`.
-* **Roteamento por Canais (Discord):** Canais dedicados por categoria (`pull_requests`, `issues`, `workflows`, `repository`).
+  * Identificação automática de prefixos no título do PR ou Issue (`feat`, `fix`, `hot`, `doc`, `chore`).
+  * Esquema de cores e destaques dinâmicos de acordo com o status e tipo do evento.
+  * Menção automática de `@everyone` para PRs e Issues marcados como `hot` no Discord.
+* **Roteamento por Canais / Chats:** 
+  * Canais dedicados por categoria no Discord (`pull_requests`, `issues`, `workflows`, `repository`).
+  * Envio direcionado para canais do Slack e grupos/chats do Telegram.
 * **Observabilidade Integrada:**
   * Endpoint `/health` para sondagem de integridade (Liveness/Readiness).
-  * Métricas Prometheus expostas em `/metrics`.
+  * Métricas operacionais em `/metrics` no formato Prometheus.
   * Logs estruturados com [zerolog](https://github.com/rs/zerolog) com suporte a níveis de log e ambientes.
 
 ---
@@ -73,13 +78,14 @@ Hookord/
 │   └── integrations/          # Adaptadores dos mensageiros
 │       ├── discord/           # Cliente, builders de Embed e handlers do Discord
 │       ├── slack/             # Cliente, builders de Blocos/Attachments e handlers do Slack
+│       ├── telegram/          # Cliente, formatadores HTML e handlers do Telegram
 │       └── manager.go         # Orquestrador de integrações ativas
 └── k8s/                       # Manifestos de Deployment e Service para Kubernetes
 ```
 
 ---
 
-##  Endpoints
+## 📡 Endpoints
 
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
@@ -89,11 +95,12 @@ Hookord/
 
 ---
 
-##  Requisitos
+## 📋 Requisitos
 
 * **Go**: 1.22+
 * **Redis**: Instância ativa para persistência do estado e mapeamento de mensagens
 * **Docker & Docker Compose** *(opcional para ambiente conteinerizado)*
+* **Kubernetes** *(opcional para deploy em cluster)*
 
 ---
 
@@ -112,7 +119,7 @@ cp .env.example .env
 | `APP_ENV` | Ambiente da aplicação (`development`, `production`) | Não | `development` |
 | `PORT` | Porta onde o servidor HTTP escuta | Não | `8080` |
 | `LOG_LEVEL` | Nível dos logs (`debug`, `info`, `warn`, `error`) | Não | `info` |
-| `GITHUB_SECRET` | Secret configurado no webhook do GitHub para validação de assinatura | **Sim** | `seu_segredo_webhook` |
+| `GITHUB_SECRET` | Secret configurado no webhook do GitHub para validação HMAC | **Sim** | `seu_segredo_webhook` |
 | `REDIS_URL` | URL de conexão da instância do Redis | **Sim** | `redis://localhost:6379` |
 | `DISCORD_TOKEN` | Token do Bot do Discord | Condicional* | `seu_token_discord` |
 | `DISCORD_CHANNEL_PULL_REQUESTS` | ID do canal do Discord para Pull Requests | Condicional* | `123456789012345678` |
@@ -121,8 +128,10 @@ cp .env.example .env
 | `DISCORD_CHANNEL_REPOSITORY` | ID do canal do Discord para eventos de repositório | Não | `123456789012345678` |
 | `SLACK_TOKEN` | Token de Bot da API do Slack (`xoxb-...`) | Condicional* | `xoxb-seu-token-slack` |
 | `SLACK_CHANNEL_ID` | ID do canal do Slack padrão para notificações | Condicional* | `C0123456789` |
+| `TELEGRAM_TOKEN` | Token do Bot do Telegram | Condicional* | `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ` |
+| `TELEGRAM_CHAT_ID` | ID do Chat/Canal/Grupo do Telegram | Condicional* | `-1001234567890` ou `123456789` |
 
-> *\* As credenciais do Discord e Slack são necessárias de acordo com os adaptadores que você deseja manter habilitados.*
+> *\* As credenciais do Discord, Slack e Telegram são necessárias de acordo com os adaptadores que você deseja manter habilitados.*
 
 ---
 
@@ -163,6 +172,15 @@ docker-compose up app-dev
 go run cmd/hookord/main.go
 ```
 
+### Via Kubernetes
+
+Manifestos de `Deployment` e `Service` estão disponíveis no diretório `k8s/`:
+
+```bash
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+```
+
 ---
 
 ## 🔗 Configuração do Webhook no GitHub
@@ -201,12 +219,12 @@ O repositório conta com workflows configurados no GitHub Actions:
 
 ## 📊 Status dos Eventos e Integrações
 
-| Evento GitHub | Ações Suportadas | Discord | Slack |
-| :--- | :--- | :---: | :---: |
-| **Pull Requests** | `opened`, `reopened`, `closed`, `synchronize`, `ready_for_review` | ✅ Suportado | ✅ Suportado |
-| **Issues** | `opened`, `reopened`, `closed` | ✅ Suportado | ⏳ Em breve |
-| **Workflows** | Execuções e status de Actions | ⏳ Em breve | ⏳ Em breve |
-| **Repository** | `push`, `release`, `tag` | ⏳ Em breve | ⏳ Em breve |
+| Evento GitHub | Ações Suportadas | Discord | Slack | Telegram |
+| :--- | :--- | :---: | :---: | :---: |
+| **Pull Requests** | `opened`, `reopened`, `closed`, `synchronize`, `ready_for_review` | ✅ Suportado | ✅ Suportado | ✅ Suportado |
+| **Issues** | `opened`, `reopened`, `closed` | ✅ Suportado | ✅ Suportado | ✅ Suportado |
+| **Workflows** | Execuções e status de Actions | ⏳ Em breve | ⏳ Em breve | ⏳ Em breve |
+| **Repository** | `push`, `release`, `tag` | ⏳ Em breve | ⏳ Em breve | ⏳ Em breve |
 
 ---
 
