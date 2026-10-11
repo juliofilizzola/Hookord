@@ -17,7 +17,7 @@ type mockTelegramClient struct {
 	editCalls int
 }
 
-func (m *mockTelegramClient) SendMessage(chatId string, text string) (int, error) {
+func (m *mockTelegramClient) SendMessage(_ string, _ string) (int, error) {
 	m.sendCalls++
 	if m.sendErr != nil {
 		return 0, m.sendErr
@@ -25,7 +25,7 @@ func (m *mockTelegramClient) SendMessage(chatId string, text string) (int, error
 	return m.sendId, nil
 }
 
-func (m *mockTelegramClient) EditMessage(chatId string, messageId int, text string) (int, error) {
+func (m *mockTelegramClient) EditMessage(_ string, _ int, _ string) (int, error) {
 	m.editCalls++
 	if m.editErr != nil {
 		return 0, m.editErr
