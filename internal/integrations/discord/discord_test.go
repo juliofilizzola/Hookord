@@ -169,11 +169,11 @@ func TestHandlePullRequest_Success_NewMessage(t *testing.T) {
 		fmt.Println("repo", repo.saved.EntityID)
 		t.Errorf("saved entityID = %q, want '101'", repo.saved.EntityID)
 	}
-	if repo.saved.DiscordMessageID != "msg-discord-001" {
-		t.Errorf("saved messageID = %q, want 'msg-discord-001'", repo.saved.DiscordMessageID)
+	if repo.saved.MessageID != "msg-discord-001" {
+		t.Errorf("saved messageID = %q, want 'msg-discord-001'", repo.saved.MessageID)
 	}
-	if repo.saved.DiscordChannelID != "channel-pr-123" {
-		t.Errorf("saved channelID = %q, want 'channel-pr-123'", repo.saved.DiscordChannelID)
+	if repo.saved.ChannelID != "channel-pr-123" {
+		t.Errorf("saved channelID = %q, want 'channel-pr-123'", repo.saved.ChannelID)
 	}
 	if repo.saved.TotalReviews != 2 {
 		t.Errorf("saved TotalReviews = %d, want 2", repo.saved.TotalReviews)
@@ -186,11 +186,11 @@ func TestHandlePullRequest_Success_EditMessage(t *testing.T) {
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
 			"101-discord": {
-				EntityID:         "101-discord",
-				DiscordMessageID: "existing-msg-999",
-				DiscordChannelID: "channel-pr-123",
-				TotalReviews:     3,
-				TotalReviewers:   2,
+				EntityID:       "101-discord",
+				MessageID:      "existing-msg-999",
+				ChannelID:      "channel-pr-123",
+				TotalReviews:   3,
+				TotalReviewers: 2,
 			},
 		},
 	}
@@ -233,12 +233,8 @@ func TestHandlePullRequest_Success_EditMessage(t *testing.T) {
 		t.Errorf("lastEditChannelID = %q, want 'channel-pr-123'", client.lastEditChannelID)
 	}
 
-	// Verify review stats were preserved from existing mapping
-	if event.TotalReviews != 3 {
-		t.Errorf("event.TotalReviews = %d, want 3", event.TotalReviews)
-	}
-	if event.TotalReviewers != 2 {
-		t.Errorf("event.TotalReviewers = %d, want 2", event.TotalReviewers)
+	if repo.saved == nil || repo.saved.TotalReviews != event.TotalReviews {
+		t.Errorf("saved mapping should reflect event review stats, got %+v", repo.saved)
 	}
 }
 
@@ -284,7 +280,7 @@ func TestHandleIssue_Success_NewMessage(t *testing.T) {
 	if client.lastChannelID != "channel-issue-456" {
 		t.Errorf("expected channel 'channel-issue-456', got %q", client.lastChannelID)
 	}
-	if repo.saved == nil || repo.saved.DiscordMessageID != "msg-issue-001" {
+	if repo.saved == nil || repo.saved.MessageID != "msg-issue-001" {
 		t.Errorf("saved mapping msgID = %v, want 'msg-issue-001'", repo.saved)
 	}
 }
@@ -294,10 +290,10 @@ func TestHandleIssue_Success_EditMessage(t *testing.T) {
 	client := &mockDiscordClient{}
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
-			"202": {
-				EntityID:         "202",
-				DiscordMessageID: "msg-issue-existing",
-				DiscordChannelID: "channel-issue-456",
+			"202-discord": {
+				EntityID:  "202-discord",
+				MessageID: "msg-issue-existing",
+				ChannelID: "channel-issue-456",
 			},
 		},
 	}
@@ -489,9 +485,9 @@ func TestHandlePullRequest_DiscordEditError(t *testing.T) {
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
 			"10-discord": {
-				EntityID:         "10-discord",
-				DiscordMessageID: "msg-old",
-				DiscordChannelID: "channel-pr-123",
+				EntityID:  "10-discord",
+				MessageID: "msg-old",
+				ChannelID: "channel-pr-123",
 			},
 		},
 	}

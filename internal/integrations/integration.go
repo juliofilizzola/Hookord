@@ -27,3 +27,28 @@ type Integration interface {
 	HandlePullRequest(ctx context.Context, event *PullRequestEvent) error
 	HandleIssue(ctx context.Context, event *IssueEvent) error
 }
+type Closer interface {
+	Close() error
+}
+
+func NewPullRequestEntry(integration, channelID string, event *PullRequestEvent) Entry {
+	return Entry{
+		Integration:    integration,
+		EntityID:       event.PullRequest.GetID(),
+		ChannelID:      channelID,
+		Repository:     event.Repository.GetFullName(),
+		Status:         event.PullRequest.GetState(),
+		TotalReviews:   event.TotalReviews,
+		TotalReviewers: event.TotalReviewers,
+	}
+}
+
+func NewIssueEntry(integration, channelID string, event *IssueEvent) Entry {
+	return Entry{
+		Integration: integration,
+		EntityID:    event.Issue.GetID(),
+		ChannelID:   channelID,
+		Repository:  event.Repository.GetFullName(),
+		Status:      event.Issue.GetState(),
+	}
+}

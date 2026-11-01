@@ -186,8 +186,8 @@ func TestHandlePullRequest_NilEvent(t *testing.T) {
 func TestHandlePullRequest_NilClient(t *testing.T) {
 	i := New(Config{Token: "tok", ChannelId: "C1"}, &mockRepo{}, nil)
 	event := newPREvent(1, "feat: something", domain.PullRequestStateOpen)
-	if err := i.HandlePullRequest(context.Background(), event); !errors.Is(err, ErrEventNil) {
-		t.Errorf("expected ErrEventNil when client is nil, got %v", err)
+	if err := i.HandlePullRequest(context.Background(), event); !errors.Is(err, ErrClientUnavailable) {
+		t.Errorf("expected ErrClientUnavailable when client is nil, got %v", err)
 	}
 }
 
@@ -219,11 +219,11 @@ func TestHandlePullRequest_NewMessage_Success(t *testing.T) {
 	if repo.saved == nil {
 		t.Fatal("expected mapping to be saved")
 	}
-	if repo.saved.SlackMessageID != "C1" {
-		t.Errorf("SlackMessageID = %q, want 'C1'", repo.saved.SlackMessageID)
+	if repo.saved.ChannelID != "C1" {
+		t.Errorf("ChannelID = %q, want 'C1'", repo.saved.ChannelID)
 	}
-	if repo.saved.SlackTimestamp != "ts-001" {
-		t.Errorf("SlackTimestamp = %q, want 'ts-001'", repo.saved.SlackTimestamp)
+	if repo.saved.MessageID != "ts-001" {
+		t.Errorf("MessageID = %q, want 'ts-001'", repo.saved.MessageID)
 	}
 }
 
@@ -256,9 +256,9 @@ func TestHandlePullRequest_UpdateMessage_Success(t *testing.T) {
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
 			entityID: {
-				EntityID:       entityID,
-				SlackMessageID: "old-channel",
-				SlackTimestamp: "ts-old",
+				EntityID:  entityID,
+				ChannelID: "old-channel",
+				MessageID: "ts-old",
 			},
 		},
 	}
@@ -273,8 +273,8 @@ func TestHandlePullRequest_UpdateMessage_Success(t *testing.T) {
 	if client.updateCalls != 1 {
 		t.Errorf("expected 1 UpdateMessage call, got %d", client.updateCalls)
 	}
-	if repo.saved.SlackTimestamp != "ts-new" {
-		t.Errorf("SlackTimestamp = %q, want 'ts-new'", repo.saved.SlackTimestamp)
+	if repo.saved.MessageID != "ts-new" {
+		t.Errorf("MessageID = %q, want 'ts-new'", repo.saved.MessageID)
 	}
 }
 
@@ -283,19 +283,21 @@ func TestHandlePullRequest_UpdateMessage_EmptyTimestamp(t *testing.T) {
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
 			entityID: {
-				EntityID:       entityID,
-				SlackMessageID: "",
-				SlackTimestamp: "",
+				EntityID:  entityID,
+				ChannelID: "",
+				MessageID: "",
 			},
 		},
 	}
-	client := &mockSlackClient{}
+	client := &mockSlackClient{postChannel: "C1", postTimestamp: "ts-88"}
 	i := New(Config{Token: "tok", ChannelId: "C1"}, repo, client)
 
 	event := newPREvent(88, "feat: x", domain.PullRequestStateOpen)
-	err := i.HandlePullRequest(context.Background(), event)
-	if !errors.Is(err, ErrEventNotFound) {
-		t.Errorf("expected ErrEventNotFound, got %v", err)
+	if err := i.HandlePullRequest(context.Background(), event); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if repo.saved == nil || repo.saved.MessageID != "ts-88" {
+		t.Errorf("expected mapping saved with new message, got %+v", repo.saved)
 	}
 }
 
@@ -304,9 +306,9 @@ func TestHandlePullRequest_UpdateMessage_UpdateError(t *testing.T) {
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
 			entityID: {
-				EntityID:       entityID,
-				SlackMessageID: "C77",
-				SlackTimestamp: "ts-77",
+				EntityID:  entityID,
+				ChannelID: "C77",
+				MessageID: "ts-77",
 			},
 		},
 	}
@@ -325,9 +327,9 @@ func TestHandlePullRequest_UpdateMessage_SaveAfterUpdateError(t *testing.T) {
 	repo := &mockRepo{
 		mappings: map[string]*domain.MessageMapping{
 			entityID: {
-				EntityID:       entityID,
-				SlackMessageID: "C66",
-				SlackTimestamp: "ts-66",
+				EntityID:  entityID,
+				ChannelID: "C66",
+				MessageID: "ts-66",
 			},
 		},
 		saveErr: errors.New("save err after update"),

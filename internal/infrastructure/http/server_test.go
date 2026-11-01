@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/juliofiliizzola/hookord/internal/application"
-	"github.com/juliofiliizzola/hookord/internal/infrastructure/config"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
 
@@ -19,8 +18,8 @@ import (
 func newTestServer(t *testing.T) *Server {
 	t.Helper()
 	manager := integrations.NewManager()
-	svc := application.NewWebhookService(&config.Config{}, nil, manager)
-	return NewServer("0", svc) // port 0 = OS-assigned
+	svc := application.NewWebhookService("secret", nil, manager)
+	return NewServer(Config{Port: "0"}, http.HandlerFunc(svc.HandleWebhook)) // port 0 = OS-assigned
 }
 
 // ---------------------------------------------------------------------------

@@ -22,8 +22,8 @@ func TestHandleIssue(t *testing.T) {
 	t.Run("Client nil", func(t *testing.T) {
 		integration := &Integration{client: nil}
 		err := integration.HandleIssue(ctx, newIssueEvent(1, "title", "open"))
-		if err != ErrEventNil {
-			t.Errorf("Expected ErrEventNil (client), got %v", err)
+		if err != ErrClientUnavailable {
+			t.Errorf("Expected ErrClientUnavailable, got %v", err)
 		}
 	})
 
@@ -54,7 +54,7 @@ func TestHandleIssue(t *testing.T) {
 		if repo.saved == nil {
 			t.Fatalf("Expected mapping to be saved")
 		}
-		if repo.saved.SlackMessageID != "-12345" || repo.saved.SlackTimestamp != "999" {
+		if repo.saved.ChannelID != "-12345" || repo.saved.MessageID != "999" {
 			t.Errorf("Saved mapping mismatch: %+v", repo.saved)
 		}
 	})
@@ -64,8 +64,8 @@ func TestHandleIssue(t *testing.T) {
 			mappings: map[string]*domain.MessageMapping{
 				"1-Telegram": {
 					EntityID:        "1-Telegram",
-					SlackMessageID:  "-123",
-					SlackTimestamp:  "999",
+					ChannelID:       "-123",
+					MessageID:       "999",
 					IntegrationName: "Telegram",
 				},
 			},

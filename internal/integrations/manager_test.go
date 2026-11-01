@@ -159,3 +159,29 @@ func TestManager_HandleIssue_NoIntegrations(t *testing.T) {
 		t.Errorf("expected nil error with no integrations, got %v", err)
 	}
 }
+
+type closableIntegration struct {
+	mockIntegration
+	closeErr error
+	closed   bool
+}
+
+func (c *closableIntegration) Close() error {
+	c.closed = true
+	return c.closeErr
+}
+
+func TestManager_Close(t *testing.T) {
+	closeErr := errors.New("close failed")
+	ok := &closableIntegration{mockIntegration: mockIntegration{name: "ok"}}
+	failing := &closableIntegration{mockIntegration: mockIntegration{name: "failing"}, closeErr: closeErr}
+	m := NewManager(ok, &mockIntegration{name: "no-closer"}, failing)
+
+	err := m.Close()
+	if !errors.Is(err, closeErr) {
+		t.Errorf("Close() error = %v, want %v", err, closeErr)
+	}
+	if !ok.closed || !failing.closed {
+		t.Error("every Closer integration should be closed")
+	}
+}

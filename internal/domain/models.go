@@ -12,18 +12,16 @@ type Event struct {
 }
 
 type MessageMapping struct {
-	EventID          string          `json:"event_id,omitempty"`
-	DiscordMessageID string          `json:"discord_message_id,omitempty"`
-	DiscordChannelID string          `json:"discord_channel_id,omitempty"`
-	SlackMessageID   string          `json:"slack_message_id,omitempty"`
-	SlackTimestamp   string          `json:"slack_timestamp,omitempty"`
-	IntegrationName  string          `json:"integration_name,omitempty"`
-	Repository       string          `json:"repository,omitempty"`
-	EntityID         string          `json:"entity_id,omitempty"`
-	LastStatus       string          `json:"last_status,omitempty"`
-	TotalReviews     int             `json:"total_reviews"`
-	TotalReviewers   int             `json:"total_reviewers"`
-	Reviewers        map[string]bool `json:"reviewers,omitempty"`
+	EventID         string          `json:"event_id,omitempty"`
+	ChannelID       string          `json:"channel_id,omitempty"`
+	MessageID       string          `json:"message_id,omitempty"`
+	IntegrationName string          `json:"integration_name,omitempty"`
+	Repository      string          `json:"repository,omitempty"`
+	EntityID        string          `json:"entity_id,omitempty"`
+	LastStatus      string          `json:"last_status,omitempty"`
+	TotalReviews    int             `json:"total_reviews"`
+	TotalReviewers  int             `json:"total_reviewers"`
+	Reviewers       map[string]bool `json:"reviewers,omitempty"`
 }
 
 type MessageRepository interface {

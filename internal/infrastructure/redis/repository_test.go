@@ -59,12 +59,12 @@ func TestSaveAndGetMapping(t *testing.T) {
 	ctx := context.Background()
 
 	mapping := &domain.MessageMapping{
-		EntityID:         "pr-42",
-		DiscordMessageID: "discord-msg-001",
-		DiscordChannelID: "channel-001",
-		TotalReviews:     3,
-		TotalReviewers:   2,
-		Reviewers:        map[string]bool{"alice": true, "bob": true},
+		EntityID:       "pr-42",
+		MessageID:      "discord-msg-001",
+		ChannelID:      "channel-001",
+		TotalReviews:   3,
+		TotalReviewers: 2,
+		Reviewers:      map[string]bool{"alice": true, "bob": true},
 	}
 
 	if err := repo.SaveMapping(ctx, mapping); err != nil {
@@ -81,8 +81,8 @@ func TestSaveAndGetMapping(t *testing.T) {
 	if got.EntityID != mapping.EntityID {
 		t.Errorf("EntityID = %q, want %q", got.EntityID, mapping.EntityID)
 	}
-	if got.DiscordMessageID != mapping.DiscordMessageID {
-		t.Errorf("DiscordMessageID = %q, want %q", got.DiscordMessageID, mapping.DiscordMessageID)
+	if got.MessageID != mapping.MessageID {
+		t.Errorf("MessageID = %q, want %q", got.MessageID, mapping.MessageID)
 	}
 	if got.TotalReviews != mapping.TotalReviews {
 		t.Errorf("TotalReviews = %d, want %d", got.TotalReviews, mapping.TotalReviews)
@@ -251,17 +251,15 @@ func TestMappingJSONRoundTrip(t *testing.T) {
 	ctx := context.Background()
 
 	original := &domain.MessageMapping{
-		EntityID:         "rt-1",
-		DiscordMessageID: "dm-1",
-		DiscordChannelID: "dc-1",
-		SlackMessageID:   "sm-1",
-		SlackTimestamp:   "ts-1",
-		IntegrationName:  "discord",
-		Repository:       "org/repo",
-		LastStatus:       "open",
-		TotalReviews:     5,
-		TotalReviewers:   3,
-		Reviewers:        map[string]bool{"alice": true},
+		EntityID:        "rt-1",
+		ChannelID:       "dc-1",
+		MessageID:       "dm-1",
+		IntegrationName: "discord",
+		Repository:      "org/repo",
+		LastStatus:      "open",
+		TotalReviews:    5,
+		TotalReviewers:  3,
+		Reviewers:       map[string]bool{"alice": true},
 	}
 
 	if err := repo.SaveMapping(ctx, original); err != nil {
@@ -278,5 +276,42 @@ func TestMappingJSONRoundTrip(t *testing.T) {
 	gotBytes, _ := json.Marshal(got)
 	if string(wantBytes) != string(gotBytes) {
 		t.Errorf("round-trip mismatch:\nwant: %s\n got: %s", wantBytes, gotBytes)
+	}
+}
+
+func TestGetMapping_LegacyFields(t *testing.T) {
+	cases := map[string]struct {
+		raw           string
+		wantChannelID string
+		wantMessageID string
+	}{
+		"discord": {
+			raw:           `{"entity_id":"1-discord","discord_message_id":"dm","discord_channel_id":"dc"}`,
+			wantChannelID: "dc",
+			wantMessageID: "dm",
+		},
+		"slack or telegram": {
+			raw:           `{"entity_id":"1-Slack","slack_message_id":"C1","slack_timestamp":"ts-1"}`,
+			wantChannelID: "C1",
+			wantMessageID: "ts-1",
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			repo, mr := newTestRepository(t)
+			if err := mr.Set("mapping:legacy", tc.raw); err != nil {
+				t.Fatalf("miniredis Set error: %v", err)
+			}
+
+			got, err := repo.GetMapping(context.Background(), "legacy")
+			if err != nil {
+				t.Fatalf("GetMapping error: %v", err)
+			}
+			if got.ChannelID != tc.wantChannelID || got.MessageID != tc.wantMessageID {
+				t.Errorf("got channel=%q message=%q, want channel=%q message=%q",
+					got.ChannelID, got.MessageID, tc.wantChannelID, tc.wantMessageID)
+			}
+		})
 	}
 }

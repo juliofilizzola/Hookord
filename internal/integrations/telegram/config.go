@@ -1,7 +1,5 @@
 package telegram
 
-import "errors"
-
 type Config struct {
 	Token  string
 	ChatId string
@@ -9,7 +7,10 @@ type Config struct {
 
 func (c Config) Validate() error {
 	if c.Token == "" {
-		return errors.New("token is required")
+		return ErrMissingToken
+	}
+	if c.ChatId == "" {
+		return ErrMissingChatID
 	}
 	return nil
 }

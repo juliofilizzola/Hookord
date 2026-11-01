@@ -13,6 +13,10 @@ func New(cfg Config, repo domain.MessageRepository, client TelegramClient) *Inte
 }
 
 func NewWithToken(cfg Config, repo domain.MessageRepository) (*Integration, error) {
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	client, err := NewSessionClient(cfg.Token)
 	if err != nil {
 		return nil, err

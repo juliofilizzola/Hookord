@@ -12,6 +12,7 @@ require (
 	github.com/redis/go-redis/v9 v9.21.0
 	github.com/rs/zerolog v1.35.1
 	github.com/slack-go/slack v0.29.0
+	golang.org/x/time v0.12.0
 )
 
 require (

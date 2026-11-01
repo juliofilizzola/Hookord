@@ -3,6 +3,7 @@ package integrations
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 )
@@ -48,6 +49,18 @@ func (m *Manager) HandleIssue(ctx context.Context, event *IssueEvent) error {
 				Str("integration", integration.Name()).
 				Msg("failed to handle issue event")
 			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (m *Manager) Close() error {
+	var errs []error
+	for _, integration := range m.integrations {
+		if c, ok := integration.(Closer); ok {
+			if err := c.Close(); err != nil {
+				errs = append(errs, fmt.Errorf("%s: %w", integration.Name(), err))
+			}
 		}
 	}
 	return errors.Join(errs...)
