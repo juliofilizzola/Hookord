@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -19,7 +20,7 @@ type sessionClient struct {
 func NewSessionClient(token string) (TelegramClient, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		return nil, ErrSessionConnect
+		return nil, fmt.Errorf("%w: %v", ErrSessionConnect, err)
 	}
 	return &sessionClient{bot: bot}, nil
 }

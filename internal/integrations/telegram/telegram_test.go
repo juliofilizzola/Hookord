@@ -123,7 +123,7 @@ func TestConfig_Validate_MissingToken(t *testing.T) {
 }
 
 func TestConfig_Validate_Valid(t *testing.T) {
-	cfg := Config{Token: "tok"}
+	cfg := Config{Token: "tok", ChatId: "-100"}
 	err := cfg.Validate()
 	if err != nil {
 		t.Errorf("Unexpected error for valid config: %v", err)

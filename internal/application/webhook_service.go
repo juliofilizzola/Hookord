@@ -6,21 +6,20 @@ import (
 	"github.com/google/go-github/v60/github"
 	"github.com/juliofiliizzola/hookord/internal/domain"
 	"github.com/juliofiliizzola/hookord/internal/events/review"
-	"github.com/juliofiliizzola/hookord/internal/infrastructure/config"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 	"github.com/rs/zerolog/log"
 )
 
 type WebhookService struct {
-	config        *config.Config
+	secret        []byte
 	repo          domain.MessageRepository
 	manager       *integrations.Manager
 	reviewCounter *review.Counter
 }
 
-func NewWebhookService(cfg *config.Config, repo domain.MessageRepository, manager *integrations.Manager) *WebhookService {
+func NewWebhookService(githubSecret string, repo domain.MessageRepository, manager *integrations.Manager) *WebhookService {
 	return &WebhookService{
-		config:        cfg,
+		secret:        []byte(githubSecret),
 		repo:          repo,
 		manager:       manager,
 		reviewCounter: review.NewCounter(repo),
@@ -33,12 +32,13 @@ func (s *WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	secret := []byte("your_github_webhook_secret")
-	if s.config != nil && s.config.GithubSecret != "" {
-		secret = []byte(s.config.GithubSecret)
+	if len(s.secret) == 0 {
+		log.Error().Msg("github secret not configured")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	payload, err := github.ValidatePayload(r, secret)
+	payload, err := github.ValidatePayload(r, s.secret)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to validate payload")
 		w.WriteHeader(http.StatusBadRequest)

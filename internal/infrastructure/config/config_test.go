@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"testing"
 )
@@ -106,5 +107,39 @@ func TestLoad_CustomValuesAndChannelMappings(t *testing.T) {
 		if got := cfg.ChannelMappings[category]; got != expectedChannel {
 			t.Errorf("cfg.ChannelMappings[%q] = %q, want %q", category, got, expectedChannel)
 		}
+	}
+}
+
+func TestValidate(t *testing.T) {
+	if err := (&Config{}).Validate(); !errors.Is(err, ErrMissingGithubSecret) || !errors.Is(err, ErrMissingRedisURL) {
+		t.Errorf("Validate() = %v, want missing secret and redis url", err)
+	}
+	if err := (&Config{GithubSecret: "s", RedisURL: "redis://x"}).Validate(); err != nil {
+		t.Errorf("Validate() unexpected error: %v", err)
+	}
+}
+
+func TestLoad_SecurityDefaultsAndOverrides(t *testing.T) {
+	t.Setenv("RATE_LIMIT_RPS", "")
+	t.Setenv("RATE_LIMIT_BURST", "invalid")
+	cfg, _ := Load()
+	if cfg.RateLimitRPS != 10 || cfg.RateLimitBurst != 20 || cfg.RateLimitTrustProxy {
+		t.Errorf("unexpected defaults: rps=%v burst=%d trust=%v", cfg.RateLimitRPS, cfg.RateLimitBurst, cfg.RateLimitTrustProxy)
+	}
+
+	t.Setenv("API_KEY", "key")
+	t.Setenv("RATE_LIMIT_RPS", "2.5")
+	t.Setenv("RATE_LIMIT_BURST", "5")
+	t.Setenv("RATE_LIMIT_TRUST_PROXY", "true")
+	cfg, _ = Load()
+	if cfg.APIKey != "key" || cfg.RateLimitRPS != 2.5 || cfg.RateLimitBurst != 5 || !cfg.RateLimitTrustProxy {
+		t.Errorf("unexpected overrides: %+v", cfg)
+	}
+}
+
+func TestIntegrationEnabled(t *testing.T) {
+	cfg := &Config{TelegramToken: "t"}
+	if cfg.DiscordEnabled() || cfg.SlackEnabled() || !cfg.TelegramEnabled() {
+		t.Errorf("only telegram should be enabled")
 	}
 }

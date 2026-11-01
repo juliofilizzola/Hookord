@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/juliofiliizzola/hookord/internal/domain"
-	"github.com/juliofiliizzola/hookord/internal/infrastructure/config"
 	"github.com/juliofiliizzola/hookord/internal/integrations"
 )
 
@@ -82,9 +81,9 @@ func (m *mockIntegration) HandleIssue(_ context.Context, _ *integrations.IssueEv
 // Helpers
 // ---------------------------------------------------------------------------
 
-func newService(cfg *config.Config, repo domain.MessageRepository, i ...integrations.Integration) *WebhookService {
+func newService(secret string, repo domain.MessageRepository, i ...integrations.Integration) *WebhookService {
 	manager := integrations.NewManager(i...)
-	return NewWebhookService(cfg, repo, manager)
+	return NewWebhookService(secret, repo, manager)
 }
 
 func validPRPayload(secret string) *http.Request {
@@ -131,7 +130,7 @@ func unknownEventRequest(secret string) *http.Request {
 // ---------------------------------------------------------------------------
 
 func TestNewWebhookService(t *testing.T) {
-	svc := newService(&config.Config{}, &mockRepo{})
+	svc := newService("", &mockRepo{})
 	if svc == nil {
 		t.Fatal("NewWebhookService returned nil")
 	}
@@ -142,7 +141,7 @@ func TestNewWebhookService(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestHandleWebhook_Ping(t *testing.T) {
-	svc := newService(&config.Config{GithubSecret: "secret"}, &mockRepo{})
+	svc := newService("secret", &mockRepo{})
 	rr := httptest.NewRecorder()
 	svc.HandleWebhook(rr, pingRequest())
 
@@ -156,7 +155,7 @@ func TestHandleWebhook_Ping(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestHandleWebhook_InvalidSignature(t *testing.T) {
-	svc := newService(&config.Config{GithubSecret: "correct-secret"}, &mockRepo{})
+	svc := newService("correct-secret", &mockRepo{})
 
 	body := `{"action":"opened"}`
 	req := httptest.NewRequest("POST", "/webhook", strings.NewReader(body))
@@ -178,7 +177,7 @@ func TestHandleWebhook_InvalidSignature(t *testing.T) {
 
 func TestHandleWebhook_PullRequest_Success(t *testing.T) {
 	const secret = "mysecret"
-	svc := newService(&config.Config{GithubSecret: secret}, &mockRepo{}, &mockIntegration{name: "discord"})
+	svc := newService(secret, &mockRepo{}, &mockIntegration{name: "discord"})
 	rr := httptest.NewRecorder()
 	svc.HandleWebhook(rr, validPRPayload(secret))
 
@@ -187,18 +186,13 @@ func TestHandleWebhook_PullRequest_Success(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// HandleWebhook – pull request with nil config (uses default secret)
-// ---------------------------------------------------------------------------
-
-func TestHandleWebhook_NilConfig_UsesDefaultSecret(t *testing.T) {
-	const defaultSecret = "your_github_webhook_secret"
-	svc := newService(nil, &mockRepo{}, &mockIntegration{name: "discord"})
+func TestHandleWebhook_RejectsLegacyDefaultSecret(t *testing.T) {
+	svc := newService("real-secret", &mockRepo{}, &mockIntegration{name: "discord"})
 	rr := httptest.NewRecorder()
-	svc.HandleWebhook(rr, validPRPayload(defaultSecret))
+	svc.HandleWebhook(rr, validPRPayload("your_github_webhook_secret"))
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", rr.Code)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rr.Code)
 	}
 }
 
@@ -209,7 +203,7 @@ func TestHandleWebhook_NilConfig_UsesDefaultSecret(t *testing.T) {
 func TestHandleWebhook_PullRequest_IntegrationError(t *testing.T) {
 	const secret = "mysecret"
 	svc := newService(
-		&config.Config{GithubSecret: secret},
+		secret,
 		&mockRepo{},
 		&mockIntegration{name: "discord", prErr: errors.New("discord down")},
 	)
@@ -227,7 +221,7 @@ func TestHandleWebhook_PullRequest_IntegrationError(t *testing.T) {
 
 func TestHandleWebhook_Issue_Success(t *testing.T) {
 	const secret = "mysecret"
-	svc := newService(&config.Config{GithubSecret: secret}, &mockRepo{}, &mockIntegration{name: "discord"})
+	svc := newService(secret, &mockRepo{}, &mockIntegration{name: "discord"})
 	rr := httptest.NewRecorder()
 	svc.HandleWebhook(rr, validIssuePayload(secret))
 
@@ -243,7 +237,7 @@ func TestHandleWebhook_Issue_Success(t *testing.T) {
 func TestHandleWebhook_Issue_IntegrationError(t *testing.T) {
 	const secret = "mysecret"
 	svc := newService(
-		&config.Config{GithubSecret: secret},
+		secret,
 		&mockRepo{},
 		&mockIntegration{name: "discord", issueErr: errors.New("issue fail")},
 	)
@@ -261,7 +255,7 @@ func TestHandleWebhook_Issue_IntegrationError(t *testing.T) {
 
 func TestHandleWebhook_UnknownEvent(t *testing.T) {
 	const secret = "mysecret"
-	svc := newService(&config.Config{GithubSecret: secret}, &mockRepo{})
+	svc := newService(secret, &mockRepo{})
 	rr := httptest.NewRecorder()
 	svc.HandleWebhook(rr, unknownEventRequest(secret))
 
@@ -270,17 +264,14 @@ func TestHandleWebhook_UnknownEvent(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// HandleWebhook – empty GithubSecret uses default
-// ---------------------------------------------------------------------------
-
-func TestHandleWebhook_EmptySecret_FallsBackToDefault(t *testing.T) {
-	const defaultSecret = "your_github_webhook_secret"
-	svc := newService(&config.Config{GithubSecret: ""}, &mockRepo{})
+func TestHandleWebhook_EmptySecret_Rejects(t *testing.T) {
+	svc := newService("", &mockRepo{})
+	req := validPRPayload("any")
+	req.Header.Del("X-Hub-Signature-256")
 	rr := httptest.NewRecorder()
-	svc.HandleWebhook(rr, validPRPayload(defaultSecret))
+	svc.HandleWebhook(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected 200 with empty secret fallback, got %d", rr.Code)
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500 when secret is not configured, got %d", rr.Code)
 	}
 }

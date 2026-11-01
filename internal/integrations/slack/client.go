@@ -14,7 +14,7 @@ type sessionClientSlack struct {
 }
 
 func NewSessionClient(token string) (SlackClient, error) {
-	session := slack.New(token, slack.OptionDebug(true))
+	session := slack.New(token)
 
 	if session == nil {
 		return nil, ErrSessionConnect

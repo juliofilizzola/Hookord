@@ -52,6 +52,11 @@
   * Endpoint `/health` para sondagem de integridade (Liveness/Readiness).
   * Métricas operacionais em `/metrics` no formato Prometheus.
   * Logs estruturados com [zerolog](https://github.com/rs/zerolog) com suporte a níveis de log e ambientes.
+* **Segurança:**
+  * Validação HMAC SHA-256 obrigatória (`GITHUB_SECRET`).
+  * API key opcional (`API_KEY`) protegendo `/webhook` e `/metrics`.
+  * Rate limit por IP (token bucket) com resposta `429 Too Many Requests`.
+  * Limite de 25MB no corpo do webhook e timeouts no servidor HTTP.
 
 ---
 
@@ -79,6 +84,7 @@ Hookord/
 │       ├── discord/           # Cliente, builders de Embed e handlers do Discord
 │       ├── slack/             # Cliente, builders de Blocos/Attachments e handlers do Slack
 │       ├── telegram/          # Cliente, formatadores HTML e handlers do Telegram
+│       ├── publisher.go       # Fluxo comum: envia ou edita a mensagem e persiste o mapeamento
 │       └── manager.go         # Orquestrador de integrações ativas
 └── k8s/                       # Manifestos de Deployment e Service para Kubernetes
 ```
@@ -89,9 +95,11 @@ Hookord/
 
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/webhook` | Recebe e valida webhooks enviados pelo GitHub (com validação HMAC SHA-256) |
-| `GET` | `/health` | Verificação de integridade do serviço (`200 OK`) |
-| `GET` | `/metrics` | Métricas operacionais no formato Prometheus |
+| `POST` | `/webhook` | Recebe e valida webhooks enviados pelo GitHub (HMAC SHA-256, API key e rate limit) |
+| `GET` | `/health` | Verificação de integridade do serviço (`200 OK`), sem autenticação |
+| `GET` | `/metrics` | Métricas operacionais no formato Prometheus (API key e rate limit) |
+
+A API key pode ser enviada pelo header `X-API-Key`, por `Authorization: Bearer <key>` ou pelo query param `api_key` (necessário para o GitHub, que não envia headers customizados).
 
 ---
 
@@ -130,8 +138,12 @@ cp .env.example .env
 | `SLACK_CHANNEL_ID` | ID do canal do Slack padrão para notificações | Condicional* | `C0123456789` |
 | `TELEGRAM_TOKEN` | Token do Bot do Telegram | Condicional* | `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ` |
 | `TELEGRAM_CHAT_ID` | ID do Chat/Canal/Grupo do Telegram | Condicional* | `-1001234567890` ou `123456789` |
+| `API_KEY` | Chave exigida em `/webhook` e `/metrics` (vazio desabilita) | Recomendada | `openssl rand -hex 32` |
+| `RATE_LIMIT_RPS` | Requisições por segundo permitidas por IP (`0` desabilita) | Não | `10` |
+| `RATE_LIMIT_BURST` | Rajada máxima de requisições por IP | Não | `20` |
+| `RATE_LIMIT_TRUST_PROXY` | Usa o primeiro IP do `X-Forwarded-For` (habilite só atrás de proxy/ingress) | Não | `false` |
 
-> *\* As credenciais do Discord, Slack e Telegram são necessárias de acordo com os adaptadores que você deseja manter habilitados.*
+> *\* As credenciais do Discord, Slack e Telegram são necessárias de acordo com os adaptadores que você deseja manter habilitados.* Cada integração só é habilitada quando seu token está definido; é necessário ao menos uma.
 
 ---
 
@@ -187,7 +199,7 @@ kubectl apply -f k8s/service.yaml
 
 1. No repositório ou organização no GitHub, vá em **Settings** -> **Webhooks** -> **Add webhook**.
 2. Preencha os campos:
-   * **Payload URL**: `https://seu-dominio.com/webhook`
+   * **Payload URL**: `https://seu-dominio.com/webhook` (com `API_KEY` definida: `https://seu-dominio.com/webhook?api_key=SUA_API_KEY`)
    * **Content type**: `application/json`
    * **Secret**: O mesmo valor informado na variável `GITHUB_SECRET` do seu `.env`.
    * **SSL verification**: Habilitado (recomendado).

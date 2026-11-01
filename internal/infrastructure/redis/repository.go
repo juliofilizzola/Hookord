@@ -10,6 +10,13 @@ import (
 	redisClient "github.com/redis/go-redis/v9"
 )
 
+type legacyMapping struct {
+	DiscordMessageID string `json:"discord_message_id"`
+	DiscordChannelID string `json:"discord_channel_id"`
+	SlackMessageID   string `json:"slack_message_id"`
+	SlackTimestamp   string `json:"slack_timestamp"`
+}
+
 type repository struct {
 	client *redisClient.Client
 }
@@ -50,6 +57,19 @@ func (r *repository) GetMapping(ctx context.Context, entityID string) (*domain.M
 	var mapping domain.MessageMapping
 	if err := json.Unmarshal([]byte(val), &mapping); err != nil {
 		return nil, err
+	}
+
+	if mapping.MessageID == "" {
+		var legacy legacyMapping
+		if err := json.Unmarshal([]byte(val), &legacy); err != nil {
+			return nil, err
+		}
+		switch {
+		case legacy.DiscordMessageID != "":
+			mapping.ChannelID, mapping.MessageID = legacy.DiscordChannelID, legacy.DiscordMessageID
+		case legacy.SlackTimestamp != "":
+			mapping.ChannelID, mapping.MessageID = legacy.SlackMessageID, legacy.SlackTimestamp
+		}
 	}
 
 	return &mapping, nil

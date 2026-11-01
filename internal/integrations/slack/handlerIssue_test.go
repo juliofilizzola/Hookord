@@ -47,8 +47,8 @@ func TestHandleIssue(t *testing.T) {
 	t.Run("Client nil", func(t *testing.T) {
 		integration := &Integration{client: nil}
 		err := integration.HandleIssue(ctx, newIssueEvent(1, "title", "open"))
-		if err != ErrEventNil {
-			t.Errorf("Expected ErrEventNil (client), got %v", err)
+		if err != ErrClientUnavailable {
+			t.Errorf("Expected ErrClientUnavailable, got %v", err)
 		}
 	})
 
@@ -79,7 +79,7 @@ func TestHandleIssue(t *testing.T) {
 		if repo.saved == nil {
 			t.Fatalf("Expected mapping to be saved")
 		}
-		if repo.saved.SlackMessageID != "C123" || repo.saved.SlackTimestamp != "ts123" {
+		if repo.saved.ChannelID != "C123" || repo.saved.MessageID != "ts123" {
 			t.Errorf("Saved mapping mismatch: %+v", repo.saved)
 		}
 	})
@@ -101,8 +101,8 @@ func TestHandleIssue(t *testing.T) {
 			mappings: map[string]*domain.MessageMapping{
 				"1-Slack": {
 					EntityID:        "1-Slack",
-					SlackMessageID:  "C123",
-					SlackTimestamp:  "ts123",
+					ChannelID:       "C123",
+					MessageID:       "ts123",
 					IntegrationName: "Slack",
 				},
 			},
@@ -118,28 +118,30 @@ func TestHandleIssue(t *testing.T) {
 		if client.updateCalls != 1 {
 			t.Errorf("Expected 1 UpdateMessage call, got %d", client.updateCalls)
 		}
-		if repo.saved == nil || repo.saved.SlackTimestamp != "ts456" {
+		if repo.saved == nil || repo.saved.MessageID != "ts456" {
 			t.Errorf("Expected mapping to be saved with new timestamp")
 		}
 	})
 
-	t.Run("UpdateMessage missing channel or timestamp", func(t *testing.T) {
+	t.Run("UpdateMessage missing channel falls back to configured channel", func(t *testing.T) {
 		repo := &mockRepo{
 			mappings: map[string]*domain.MessageMapping{
 				"1-Slack": {
 					EntityID:        "1-Slack",
-					SlackMessageID:  "", // missing
-					SlackTimestamp:  "ts123",
+					ChannelID:       "", // missing
+					MessageID:       "ts123",
 					IntegrationName: "Slack",
 				},
 			},
 		}
-		client := &mockSlackClient{}
+		client := &mockSlackClient{newTimestamp: "ts456"}
 		integration := &Integration{client: client, repo: repo, cfg: Config{ChannelId: "C123"}}
 
-		err := integration.HandleIssue(ctx, newIssueEvent(1, "title", "open"))
-		if err != ErrEventNotFound {
-			t.Errorf("Expected ErrEventNotFound, got %v", err)
+		if err := integration.HandleIssue(ctx, newIssueEvent(1, "title", "open")); err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+		if client.updateCalls != 1 || client.postCalls != 0 {
+			t.Errorf("expected 1 update and 0 post calls, got update=%d post=%d", client.updateCalls, client.postCalls)
 		}
 	})
 }
